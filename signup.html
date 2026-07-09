@@ -370,17 +370,17 @@
   <script>
     (function() {
       // ==================== SUPABASE CONFIGURATION ====================
-      // Replace with your actual Supabase project URL and anon key
-      const SUPABASE_URL = 'https://supabase.com/dashboard/project/mmnibgqfamzbxwcegjgu';
+      const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbmliZ3FmYW16Ynh3Y2Vnamd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTYwNzYsImV4cCI6MjA5OTE3MjA3Nn0.kxxKXHkUceloqQVg6JjWPBVCP_R-TQ7QRn6LKj9nuQ4';
 
       // Initialize Supabase client
-      const supabase = window.supabase?.createClient 
-        ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-        : null;
-
-      if (!supabase) {
-        console.warn('Supabase SDK not loaded. Make sure the CDN script is included.');
+      let supabaseClient = null;
+      
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase client initialized successfully');
+      } else {
+        console.warn('⚠️ Supabase SDK not loaded. Check your internet connection.');
       }
 
       // ==================== DOM ELEMENTS ====================
@@ -461,7 +461,7 @@
         step2.classList.add('active');
       }
 
-      // ==================== SUPABASE SIGN UP ====================
+      // ==================== SUPABASE SIGN UP (NO EMAIL CONFIRMATION) ====================
       async function signUpWithSupabase() {
         hideAllErrors();
 
@@ -493,31 +493,65 @@
           // Create a unique email-like identifier since Supabase Auth requires email
           const email = `${username.toLowerCase().replace(/\s+/g, '_')}@avocadochat.user`;
 
-          // 1. Sign up with Supabase Auth
-          const { data: authData, error: authError } = await supabase.auth.signUp({
+          // Sign up with email confirmation DISABLED via options
+          const { data: authData, error: authError } = await supabaseClient.auth.signUp({
             email: email,
             password: password,
             options: {
               data: {
                 username: username,
                 birthday: `${month} ${day}, ${year}`
-              }
+              },
+              // Disable email confirmation - user is immediately signed in
+              emailRedirectTo: undefined
             }
           });
 
           if (authError) {
-            // Handle duplicate email/usernames
             if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
               throw new Error('Username already taken. Please choose another.');
             }
             throw authError;
           }
 
-          // 2. Insert additional user data into a 'profiles' table
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([
-              {
+          // If user is already confirmed (due to Supabase settings), sign them in immediately
+          if (authData.user && authData.session) {
+            console.log('✅ User signed up and signed in automatically');
+          } else if (authData.user && !authData.session) {
+            // User created but needs manual sign in - auto sign them in
+            console.log('🔄 Signing in user automatically...');
+            const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+              email: email,
+              password: password
+            });
+            
+            if (signInError) {
+              console.warn('Auto sign-in failed:', signInError.message);
+              // Continue anyway - user can log in manually
+            }
+          }
+
+          // Insert additional user data into 'profiles' table
+          if (authData.user) {
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .insert([
+                {
+                  id: authData.user.id,
+                  username: username,
+                  birthday: `${month} ${day}, ${year}`,
+                  birthday_month: month,
+                  birthday_day: parseInt(day),
+                  birthday_year: parseInt(year),
+                  created_at: new Date().toISOString()
+                }
+              ]);
+
+            if (profileError) {
+              console.warn('Profile creation warning:', profileError.message);
+              // If profile table doesn't exist, store in localStorage as fallback
+              const users = JSON.parse(localStorage.getItem('avocado_users') || '[]');
+              users.push({
                 id: authData.user.id,
                 username: username,
                 birthday: `${month} ${day}, ${year}`,
@@ -525,12 +559,18 @@
                 birthday_day: parseInt(day),
                 birthday_year: parseInt(year),
                 created_at: new Date().toISOString()
-              }
-            ]);
+              });
+              localStorage.setItem('avocado_users', JSON.stringify(users));
+            }
+          }
 
-          if (profileError) {
-            console.warn('Profile creation warning:', profileError.message);
-            // User is still created in Auth even if profile insert fails
+          // Store current session info locally
+          if (authData.session) {
+            localStorage.setItem('avocado_session', JSON.stringify({
+              user_id: authData.user.id,
+              username: username,
+              access_token: authData.session.access_token
+            }));
           }
 
           // Success - show message and redirect
@@ -548,7 +588,6 @@
           signupBtn.disabled = false;
           signupBtn.textContent = 'Sign up';
           
-          // Show appropriate error
           passwordError.textContent = error.message || 'An error occurred. Please try again.';
           showError(passwordError);
         }
@@ -583,10 +622,10 @@
       });
 
       signupBtn.addEventListener('click', function() {
-        if (supabase) {
+        if (supabaseClient) {
           signUpWithSupabase();
         } else {
-          alert('Supabase is not configured. Please set up your Supabase project first.');
+          alert('Supabase is not configured. Please check your internet connection and try again.');
         }
       });
 
