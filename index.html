@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avocado Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #e0e0dc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar */
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      text-decoration: none;
+    }
+
+    .logo img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 14px;
+    }
+
+    .lock-icon {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      margin-bottom: 2px;
+    }
+
+    .tagline {
+      font-size: 12px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .hero-title {
+      font-size: 30px;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-align: center;
+      letter-spacing: -0.3px;
+    }
+
+    .hero-sub {
+      font-size: 13.5px;
+      color: #666;
+      text-align: center;
+      max-width: 270px;
+      line-height: 1.6;
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      width: 100%;
+      max-width: 230px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px 0;
+      background-color: #5aa65a;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: #4a934a;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 12px 0;
+      background-color: transparent;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1.5px solid #bbb;
+      border-radius: 50px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: #888;
+      background-color: rgba(0,0,0,0.03);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="index.html" class="logo">
+      <img src="avocado.png" alt="Avocado Chat logo" />
+      avocado chat
+    </a>
+  </div>
+
+  <!-- Main -->
+  <main class="main">
+    <img src="lock.png" alt="End to end encryption" class="lock-icon" />
+
+    <p class="tagline">Private &amp; Secure Messaging</p>
+    <h1 class="hero-title">End to End Encryption</h1>
+    <p class="hero-sub">Security is our main priority. Your conversations stay between you and the people you trust.</p>
+
+    <div class="btn-group">
+      <a href="getstarted.html" class="btn-primary">Get started</a>
+      <a href="login.html" class="btn-secondary">Log in</a>
+    </div>
+  </main>
+
+</body>
+</html>
