@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Avocado Chat</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -19,13 +15,12 @@
       flex-direction: column;
     }
 
-    /* Top bar */
+    /* ── Landing ── */
     .topbar {
       padding: 18px 24px;
       display: flex;
       align-items: center;
     }
-
     .logo {
       display: flex;
       align-items: center;
@@ -35,14 +30,8 @@
       color: #1a1a1a;
       text-decoration: none;
     }
+    .logo img { width: 26px; height: 26px; object-fit: contain; }
 
-    .logo img {
-      width: 26px;
-      height: 26px;
-      object-fit: contain;
-    }
-
-    /* Main content */
     .main {
       flex: 1;
       display: flex;
@@ -52,92 +41,80 @@
       padding: 40px 20px;
       gap: 14px;
     }
+    .lock-icon { width: 24px; height: 24px; object-fit: contain; margin-bottom: 2px; }
+    .tagline { font-size: 12px; letter-spacing: 0.07em; text-transform: uppercase; color: #666; font-weight: 500; }
+    .hero-title { font-size: 30px; font-weight: 700; color: #1a1a1a; text-align: center; letter-spacing: -0.3px; }
+    .hero-sub { font-size: 13.5px; color: #666; text-align: center; max-width: 270px; line-height: 1.6; }
 
-    .lock-icon {
-      width: 44px;
-      height: 44px;
-      object-fit: contain;
-      margin-bottom: 2px;
-    }
-
-    .tagline {
-      font-size: 12px;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: #666;
-      font-weight: 500;
-    }
-
-    .hero-title {
-      font-size: 30px;
-      font-weight: 700;
-      color: #1a1a1a;
-      text-align: center;
-      letter-spacing: -0.3px;
-    }
-
-    .hero-sub {
-      font-size: 13.5px;
-      color: #666;
-      text-align: center;
-      max-width: 270px;
-      line-height: 1.6;
-    }
-
-    /* Buttons */
-    .btn-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      margin-top: 6px;
-      width: 100%;
-      max-width: 230px;
-    }
-
+    .btn-group { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 6px; width: 100%; max-width: 230px; }
     .btn-primary {
-      width: 100%;
-      padding: 13px 0;
-      background-color: #5aa65a;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      display: block;
+      width: 100%; padding: 13px 0;
+      background-color: #5aa65a; color: white;
+      font-size: 14px; font-weight: 600;
+      border: none; border-radius: 13px; cursor: pointer;
+      text-align: center; text-decoration: none; display: block;
       transition: background 0.2s;
     }
-
-    .btn-primary:hover {
-      background-color: #4a934a;
-    }
-
+    .btn-primary:hover { background-color: #4a934a; }
     .btn-secondary {
-      width: 100%;
-      padding: 12px 0;
-      background-color: transparent;
-      color: #1a1a1a;
-      font-size: 14px;
-      font-weight: 500;
-      border: 1.5px solid #bbb;
-      border-radius: 50px;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      display: block;
+      width: 100%; padding: 12px 0;
+      background-color: transparent; color: #1a1a1a;
+      font-size: 14px; font-weight: 500;
+      border: 1.5px solid #bbb; border-radius: 13px; cursor: pointer;
+      text-align: center; text-decoration: none; display: block;
       transition: border-color 0.2s, background 0.2s;
     }
+    .btn-secondary:hover { border-color: #888; background-color: rgba(0,0,0,0.03); }
 
-    .btn-secondary:hover {
-      border-color: #888;
-      background-color: rgba(0,0,0,0.03);
+    /* ── Loading overlay ── */
+    #loading-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: #e0e0dc;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      gap: 16px;
+    }
+    #loading-screen.active { display: flex; }
+
+    #lottie-container { width: 200px; height: 200px; }
+
+    .loading-label {
+      font-size: 12px;
+      color: #666;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    .loading-dots span {
+      display: inline-block;
+      animation: blink 1.2s infinite;
+      font-size: 12px;
+      color: #5aa65a;
+      margin: 0 2px;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1.2); }
     }
   </style>
 </head>
 <body>
+
+  <!-- Loading screen -->
+  <div id="loading-screen">
+    <div id="lottie-container"></div>
+    <p class="loading-label">Loading</p>
+    <div class="loading-dots">
+      <span>●</span><span>●</span><span>●</span>
+    </div>
+  </div>
 
   <!-- Top bar -->
   <div class="topbar">
@@ -150,16 +127,48 @@
   <!-- Main -->
   <main class="main">
     <img src="Lock.svg" alt="End to end encryption" class="lock-icon" />
-
     <p class="tagline">Private &amp; Secure Messaging</p>
     <h1 class="hero-title">End to End Encryption</h1>
     <p class="hero-sub">Security is our main priority. Your conversations stay between you and the people you trust.</p>
 
     <div class="btn-group">
-      <a href="getstarted.html" class="btn-primary">Get started</a>
-      <a href="login.html" class="btn-secondary">Log in</a>
+      <a href="#" class="btn-primary" onclick="goTo('getstarted.html'); return false;">Get started</a>
+      <a href="#" class="btn-secondary" onclick="goTo('login.html'); return false;">Log in</a>
     </div>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <script>
+    var destination = '';
+    var anim = null;
+
+    function goTo(url) {
+      destination = url;
+
+      // Show loading screen
+      var screen = document.getElementById('loading-screen');
+      screen.classList.add('active');
+
+      // Init lottie if not already
+      if (!anim) {
+        anim = lottie.loadAnimation({
+          container: document.getElementById('lottie-container'),
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData: LOTTIE_DATA
+        });
+      } else {
+        anim.play();
+      }
+
+      // Redirect after 2.2s
+      setTimeout(function() {
+        window.location.href = destination;
+      }, 2200);
+    }
+
+    var LOTTIE_DATA = {"nm":"Main Scene","ddd":0,"h":512,"w":512,"meta":{"g":"@lottiefiles/creator@1.99.2"},"layers":[{"ty":0,"nm":"brown avocado","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[68.00001053412342,74.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"s":[100,100],"t":18}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[259.0000105341234,333.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[253.00001053412342,333.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[259.0000105341234,333.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[273.0000105341234,333.00000361943853],"t":48},{"s":[259.0000105341234,333.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":136,"h":149,"refId":"precomp_Shape Layer - SVG_8P5QGSWESo_4166aa65-26a6-4401-b099-5b4ca10ec52e","ind":1},{"ty":0,"nm":"black 1","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[17.999982770363715,17.00000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[78,79],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,17],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,91],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,29],"t":48},{"s":[78,92],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[304.9999827703637,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[289.9999827703637,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[306.9999827703637,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[344.9999827703637,180.00000361943853],"t":48},{"s":[311.9999827703637,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":36,"h":34,"refId":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","ind":2},{"ty":0,"nm":"white 1","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[23.499982770363715,23.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,38],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,112],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,50],"t":48},{"s":[100,113],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[304.9999827703637,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[289.9999827703637,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[306.9999827703637,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[344.9999827703637,180.00000361943853],"t":48},{"s":[311.9999827703637,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":47,"h":47,"refId":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","ind":3},{"ty":0,"nm":"black","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[17.999982770363715,17.00000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[78,79],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,17],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,91],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,29],"t":48},{"s":[78,92],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[207.99998277036372,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[192.99998277036372,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[209.99998277036372,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[247.99998277036372,180.00000361943853],"t":48},{"s":[214.99998277036372,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":36,"h":34,"refId":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","ind":4},{"ty":0,"nm":"white","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[23.499982770363715,23.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,38],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,112],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,50],"t":48},{"s":[100,113],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[207.99998277036372,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[192.99998277036372,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[209.99998277036372,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[247.99998277036372,180.00000361943853],"t":48},{"s":[214.99998277036372,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":47,"h":47,"refId":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","ind":5},{"ty":0,"nm":"avocado","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[134.843145291772,199.86364191363162]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[255.843145291772,255.86364191363162]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":270,"h":400,"refId":"precomp_Shape Layer - SVG_DxLTFpeOhc_d5f73ef6-8bd7-4027-a305-7bcbb835ae9b","ind":6}],"v":"5.7.0","fr":30,"op":64.98,"ip":0,"assets":[{"nm":"Ellipse 6","id":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 4","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 59","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 24","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[9.94,0],[0,9.39],[-9.94,0],[0,-9.39]],"o":[[0,9.39],[-9.94,0],[0,-9.39],[9.94,0],[0,0]],"v":[[36,17],[18,34],[0,17],[18,0],[36,17]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.0196,0.0196,0.0196]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 3","id":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 5","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 60","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 25","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[12.98,0],[0,12.98],[-12.98,0],[0,-12.98]],"o":[[0,12.98],[-12.98,0],[0,-12.98],[12.98,0],[0,0]],"v":[[47,23.5],[23.5,47],[0,23.5],[23.5,0],[47,23.5]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[1,1,1]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 1","id":"precomp_Shape Layer - SVG_DxLTFpeOhc_d5f73ef6-8bd7-4027-a305-7bcbb835ae9b","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 6","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 61","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 26","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[20.97,185.89],[14.36,24.49],[6.61,19.96],[45.08,0],[12.34,-41],[11.18,-18.87],[2.02,-31.72],[-68.46,1.1],[-5.48,0],[-6.84,-0.18]],"o":[[68.59,1.83],[-3.18,-28.21],[-10.75,-18.33],[-14.07,-42.47],[-48.12,0],[-5.99,19.9],[-16.2,27.35],[-11.34,178.16],[5.4,-0.09],[6.88,0],[0,0]],"v":[[155.2,399.37],[265.58,216.99],[230.66,139.85],[206.38,80.66],[134.59,0],[63.36,76.76],[39.83,136.66],[1.39,223.07],[118.23,399.17],[134.94,399.37],[155.2,399.37]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.2,0.7804,0.349]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 2","id":"precomp_Shape Layer - SVG_8P5QGSWESo_4166aa65-26a6-4401-b099-5b4ca10ec52e","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 7","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 62","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 27","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[37.56,0],[0,41.15],[-37.56,0],[0,-41.15]],"o":[[0,41.15],[-37.56,0],[0,-41.15],[37.56,0],[0,0]],"v":[[136,74.5],[68,149],[0,74.5],[68,0],[136,74.5]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.3412,0.149,0.149]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]}]};
+  </script>
 </body>
 </html>
