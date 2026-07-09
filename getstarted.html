@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Avocado Chat</title>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* --- RESET AND FONTS --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #e4e6e8; height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+        /* --- MAIN CONTAINER --- */
+        .app-container {
+            width: 100%; max-width: 1200px; height: 95vh;
+            background-color: #f0f0f0; display: flex;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;
+        }
+
+        /* --- LEFT SIDEBAR --- */
+        .sidebar-left {
+            width: 260px; background-color: #f0f0f0; border-right: 1px solid #dcdcdc;
+            display: flex; flex-direction: column; flex-shrink: 0;
+        }
+        .nav-item { padding: 15px 20px; cursor: pointer; color: #333; font-weight: 500; display: flex; align-items: center; gap: 12px; transition: background 0.2s; }
+        .nav-item:hover { background-color: #e5e5e5; }
+        .nav-item.active { background-color: #7eb07d; color: white; border-radius: 0 20px 20px 0; margin-right: 15px; }
+        .nav-icon { font-size: 1.2rem; }
+        
+        .friends-list { flex: 1; overflow-y: auto; border-top: 1px solid #dcdcdc; padding-top: 10px; }
+        
+        .friend-card { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #e9e9e9; cursor: pointer; transition: background 0.2s; }
+        .friend-card:hover { background-color: #e5e5e5; }
+        .friend-card.active-chat { background-color: #d9d9d9; }
+        
+        .friend-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; color: #444; flex-shrink: 0; }
+        .friend-info { flex: 1; min-width: 0; }
+        .friend-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .friend-last-msg { font-size: 0.8rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .badge { background-color: #ff3b30; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; flex-shrink: 0; }
+        
+        /* Bottom User Profile */
+        .user-profile { padding: 15px; border-top: 1px solid #dcdcdc; display: flex; align-items: center; background-color: #f0f0f0; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #d9d9d9; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; }
+        .user-status { display: flex; align-items: center; font-size: 0.8rem; color: #666; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #4cd964; margin-right: 5px; }
+
+        /* --- MIDDLE PANEL --- */
+        .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: #e4e6e8; border-right: 1px solid #dcdcdc; }
+        .chat-header { padding: 20px; background-color: #e4e6e8; border-bottom: 1px solid #dcdcdc; font-size: 1.2rem; font-weight: 600; text-align: center; color: #333; }
+
+        /* Add Friend Area */
+        .add-friend-area { padding: 30px; }
+        .add-friend-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; }
+        .add-friend-subtitle { font-size: 0.8rem; color: #666; margin-bottom: 15px; }
+        .add-friend-input-container { display: flex; align-items: center; border: 1px solid #333; border-radius: 30px; padding: 5px 5px 5px 20px; background-color: #e4e6e8; }
+        .add-friend-input { flex: 1; border: none; background: transparent; outline: none; font-size: 0.9rem; color: #333; }
+        .send-request-btn { background-color: #7eb07d; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+        .send-request-btn:hover { background-color: #6a9c69; }
+        
+        /* Chat Messages */
+        .chat-messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-color: #e4e6e8; }
+        .message { max-width: 70%; padding: 10px 15px; border-radius: 20px; font-size: 0.95rem; position: relative; word-wrap: break-word; }
+        .message-sent { align-self: flex-end; background-color: #7eb07d; color: white; border-bottom-right-radius: 4px; }
+        .message-received { align-self: flex-start; background-color: #ffffff; color: #333; border-bottom-left-radius: 4px; border: 1px solid #dcdcdc; }
+        
+        /* Chat Input */
+        .chat-input-area { padding: 15px 20px; border-top: 1px solid #dcdcdc; background-color: #e4e6e8; display: flex; gap: 10px; }
+        .chat-input-area input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 30px; outline: none; background-color: #f9f9f9; font-size: 0.9rem; }
+        .chat-input-area input:focus { border-color: #7eb07d; }
+        .chat-send-btn { background-color: #7eb07d; color: white; border: none; padding: 0 20px; border-radius: 30px; cursor: pointer; font-weight: 600; }
+        .chat-send-btn:hover { background-color: #6a9c69; }
+
+        /* --- RIGHT SIDEBAR --- */
+        .sidebar-right { width: 250px; background-color: #f0f0f0; padding: 20px; flex-shrink: 0; }
+        .sidebar-right-title { font-size: 1rem; font-weight: 600; margin-bottom: 20px; }
+        .no-friends-card { background-color: #d9d9d9; border-radius: 16px; padding: 20px; text-align: center; color: #333; }
+        .no-friends-card h4 { margin-bottom: 5px; font-weight: 700; }
+        .no-friends-card p { font-size: 0.8rem; color: #555; }
+
+        #auth-check { text-align: center; color: #d9534f; padding: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar-left">
+        <div class="nav-item active"><span class="nav-icon">👥</span> Friends</div>
+        <div class="nav-item"><span class="nav-icon">👤</span> Pending</div>
+
+        <div class="friends-list" id="friendsList">
+            <!-- Loading State -->
+            <div style="padding: 20px; text-align: center; color: #666; font-size: 0.9rem;">Loading friends...</div>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-avatar" id="currentUserAvatar">U</div>
+            <div>
+                <div style="font-weight: 600;" id="currentUserName">User</div>
+                <div class="user-status"><span class="status-dot"></span> online</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MIDDLE PANEL -->
+    <div class="chat-panel">
+        <div class="chat-header" id="chatHeader">👥 Friends</div>
+
+        <!-- ADD FRIEND ZONE -->
+        <div id="addFriendZone" style="display: block;">
+            <div class="add-friend-area">
+                <div class="add-friend-title">Add a Friend</div>
+                <div class="add-friend-subtitle">Connect with anyone who uses avocado chat</div>
+                <div class="add-friend-input-container">
+                    <input type="text" class="add-friend-input" id="friendInput" placeholder="Enter username...">
+                    <button class="send-request-btn" onclick="addNewFriend()">Send friend request</button>
+                </div>
+                <div id="friendError" style="color: red; margin-top: 10px; display: none;"></div>
+            </div>
+        </div>
+
+        <!-- CHAT ZONE -->
+        <div id="chatZone" style="display: none; flex-direction: column; height: 100%;">
+            <div class="chat-messages-container" id="messageContainer">
+                <div style="text-align:center; color:#888; margin-top:20px;">No messages yet. Say hi!</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                <button class="chat-send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="sidebar-right">
+        <div class="sidebar-right-title">friends online</div>
+        <div class="no-friends-card">
+            <h4>Its so quiet here</h4>
+            <p>I can even hear grasshopper chirping</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ================================================================
+    // 1. SUPABASE CONFIGURATION
+    // ================================================================
+    const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbmliZ3FmYW16Ynh3Y2Vnamd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTYwNzYsImV4cCI6MjA5OTE3MjA3Nn0.kxxKXHkUceloqQVg6JjWPBVCP_R-TQ7QRn6LKj9nuQ4';
+
+    if (typeof supabase === 'undefined') {
+        document.body.innerHTML = '<h1 style="color:red">Supabase SDK not loaded. Please check internet.</h1>';
+    }
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ================================================================
+    // 2. GLOBAL STATE
+    // ================================================================
+    let currentUserId = null;
+    let currentUserUsername = null;
+    let friends = []; 
+    let currentChatId = null; // The ID of the friend currently being chatted with
+    let messageSubscription = null; // To hold the realtime listener
+
+    // ================================================================
+    // 3. DOM ELEMENTS
+    // ================================================================
+    const friendsList = document.getElementById('friendsList');
+    const addFriendZone = document.getElementById('addFriendZone');
+    const chatZone = document.getElementById('chatZone');
+    const messageContainer = document.getElementById('messageContainer');
+    const chatHeader = document.getElementById('chatHeader');
+    const friendInput = document.getElementById('friendInput');
+    const messageInput = document.getElementById('messageInput');
+    const currentUserName = document.getElementById('currentUserName');
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
+    const friendError = document.getElementById('friendError');
+
+    // ================================================================
+    // 4. AUTHENTICATION & SETUP
+    // ================================================================
+    async function checkAuthAndLoad() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (!session) {
+            // No session, kick back to login
+            window.location.href = 'index.html'; // Assuming index.html is your login page
+            return;
+        }
+
+        currentUserId = session.user.id;
+        
+        // Fetch the user's username from the profiles table
+        const { data: profile, error } = await _supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', currentUserId)
+            .single();
+
+        if (error || !profile) {
+            console.error("Error fetching username", error);
+            // Handle gracefully, perhaps logout
+        } else {
+            currentUserUsername = profile.username;
+            currentUserName.innerText = currentUserUsername;
+            currentUserAvatar.innerText = currentUserUsername.charAt(0).toUpperCase();
+        }
+
+        // Load the initial friend list
+        await loadFriends();
+    }
+
+    // ================================================================
+    // 5. FRIEND MANAGEMENT
+    // ================================================================
+    async function loadFriends() {
+        // 1. Fetch list of friend IDs from the 'friends' table
+        const { data: friendRelations, error: fError } = await _supabase
+            .from('friends')
+            .select('friend_id')
+            .eq('user_id', currentUserId)
+            .eq('status', 'accepted');
+
+        if (fError) {
+            console.error("Error loading friends", fError);
+            return;
+        }
+
+        if (!friendRelations || friendRelations.length === 0) {
+            friendsList.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #888; font-size: 0.9rem;">
+                    No friends yet.<br>Add one above!
+                </div>
+            `;
+            friends = [];
+            return;
+        }
+
+        const friendIds = friendRelations.map(r => r.friend_id);
+
+        // 2. Fetch actual profile details for these IDs
+        const { data: profiles, error: pError } = await _supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', friendIds);
+
+        if (pError) {
+            console.error("Error fetching profiles", pError);
+            return;
+        }
+
+        // Note: In a real production app, you'd also fetch the last message here for the preview.
+        // For simplicity, we reset the unread count on load.
+        friends = profiles.map(p => ({
+            id: p.id,
+            name: p.username,
+            unread: 0 // You would query 'messages' table for unread count in production
+        }));
+
+        renderFriendsList();
+    }
+
+    function renderFriendsList() {
+        friendsList.innerHTML = '';
+        
+        if (friends.length === 0) {
+            friendsList.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #888; font-size: 0.9rem;">
+                    No friends yet.<br>Add one above!
+                </div>
+            `;
+            return;
+        }
+
+        friends.forEach(friend => {
+            const card = document.createElement('div');
+            card.className = `friend-card ${currentChatId === friend.id ? 'active-chat' : ''}`;
+            card.onclick = () => openChat(friend.id);
+
+            const avatar = document.createElement('div');
+            avatar.className = `friend-avatar`;
+            avatar.style.backgroundColor = '#d9d9d9';
+            avatar.innerText = friend.name.charAt(0).toUpperCase();
+
+            const info = document.createElement('div');
+            info.className = 'friend-info';
+            
+            const name = document.createElement('div');
+            name.className = 'friend-name';
+            name.innerText = friend.name;
+
+            info.appendChild(name);
+            card.appendChild(avatar);
+            card.appendChild(info);
+
+            if (friend.unread > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'badge';
+                badge.innerText = friend.unread;
+                card.appendChild(badge);
+            }
+
+            friendsList.appendChild(card);
+        });
+    }
+
+    async function addNewFriend() {
+        const username = friendInput.value.trim();
+        friendError.style.display = 'none';
+
+        if (!username) {
+            friendError.innerText = "Please enter a username.";
+            friendError.style.display = 'block';
+            return;
+        }
+
+        // 1. Look up the user by username
+        const { data: targetUser, error: uError } = await _supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', username)
+            .maybeSingle();
+
+        if (uError || !targetUser) {
+            friendError.innerText = "User not found.";
+            friendError.style.display = 'block';
+            return;
+        }
+
+        if (targetUser.id === currentUserId) {
+            friendError.innerText = "You cannot add yourself.";
+            friendError.style.display = 'block';
+            return;
+        }
+
+        // 2. Check if friend relation already exists
+        const { data: existing, error: eError } = await _supabase
+            .from('friends')
+            .select('id')
+            .eq('user_id', currentUserId)
+            .eq('friend_id', targetUser.id)
+            .maybeSingle();
+
+        if (existing) {
+            friendError.innerText = "Friend already added.";
+            friendError.style.display = 'block';
+            return;
+        }
+
+        // 3. Create the friend request
+        const { error: iError } = await _supabase
+            .from('friends')
+            .insert({ user_id: currentUserId, friend_id: targetUser.id, status: 'accepted' }); // Auto-accept for simplicity
+
+        if (iError) {
+            friendError.innerText = "Error adding friend.";
+            friendError.style.display = 'block';
+            console.error(iError);
+            return;
+        }
+
+        friendInput.value = '';
+        await loadFriends(); // Refresh the list
+    }
+
+    // ================================================================
+    // 6. CHAT LOGIC (REALTIME)
+    // ================================================================
+    async function openChat(friendId) {
+        currentChatId = friendId;
+        const friend = friends.find(f => f.id === friendId);
+        
+        // Reset unread for this friend
+        friend.unread = 0;
+
+        addFriendZone.style.display = 'none';
+        chatZone.style.display = 'flex';
+        chatHeader.innerText = `👤 ${friend.name}`;
+
+        renderFriendsList();
+        
+        // Load past messages
+        await loadMessages(friendId);
+
+        // Unsubscribe from previous chat subscription
+        if (messageSubscription) {
+            _supabase.removeChannel(messageSubscription);
+        }
+
+        // Subscribe to NEW messages for this chat
+        subscribeToNewMessages(friendId);
+    }
+
+    async function loadMessages(friendId) {
+        messageContainer.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">Loading messages...</div>';
+
+        // Query messages where (sender=ME and receiver=FRIEND) OR (sender=FRIEND and receiver=ME)
+        const { data: messages, error } = await _supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId})`)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error("Error loading messages", error);
+            messageContainer.innerHTML = '<div style="text-align:center; color:red;">Error loading chat.</div>';
+            return;
+        }
+
+        renderMessages(messages);
+    }
+
+    function renderMessages(messages) {
+        messageContainer.innerHTML = '';
+        
+        if (!messages || messages.length === 0) {
+            messageContainer.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">No messages yet. Say hi!</div>';
+            return;
+        }
+
+        messages.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            if (msg.sender_id === currentUserId) {
+                msgDiv.className = 'message message-sent';
+            } else {
+                msgDiv.className = 'message message-received';
+            }
+            msgDiv.innerText = msg.content;
+            messageContainer.appendChild(msgDiv);
+        });
+
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+
+    function subscribeToNewMessages(friendId) {
+        // Listen to INSERT events on the 'messages' table
+        messageSubscription = _supabase
+            .channel(`chat:${currentUserId}-${friendId}`)
+            .on(
+                'postgres_changes',
+                { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'messages',
+                    filter: `sender_id=eq.${friendId},receiver_id=eq.${currentUserId}` 
+                },
+                (payload) => {
+                    const newMessage = payload.new;
+                    // If the user is currently viewing this chat, append instantly
+                    if (currentChatId === friendId) {
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'message message-received';
+                        msgDiv.innerText = newMessage.content;
+                        messageContainer.appendChild(msgDiv);
+                        // Remove "no messages" placeholder if it exists
+                        if (messageContainer.children.length === 1 && messageContainer.children[0].innerText.includes("No messages")) {
+                            messageContainer.innerHTML = '';
+                            messageContainer.appendChild(msgDiv);
+                        }
+                        messageContainer.scrollTop = messageContainer.scrollHeight;
+                    } else {
+                        // If user is looking at someone else, increment unread badge
+                        const friend = friends.find(f => f.id === friendId);
+                        if (friend) {
+                            friend.unread += 1;
+                            renderFriendsList();
+                        }
+                    }
+                }
+            )
+            .subscribe();
+    }
+
+    async function sendMessage() {
+        if (currentChatId === null) return;
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        // Optimistic UI update (show message immediately without waiting for DB)
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message message-sent';
+        msgDiv.innerText = text;
+        messageContainer.appendChild(msgDiv);
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+        messageInput.value = '';
+
+        // Send to Supabase
+        const { error } = await _supabase
+            .from('messages')
+            .insert({
+                sender_id: currentUserId,
+                receiver_id: currentChatId,
+                content: text
+            });
+
+        if (error) {
+            console.error("Error sending message:", error);
+            alert("Failed to send message.");
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    // ================================================================
+    // 7. INITIALIZATION
+    // ================================================================
+    document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
+
+</script>
+</body>
+</html>
