@@ -19,7 +19,6 @@
       flex-direction: column;
     }
 
-    /* ── Topbar (same as index) ── */
     .topbar {
       padding: 18px 24px;
       display: flex;
@@ -42,7 +41,6 @@
       object-fit: contain;
     }
 
-    /* ── Main content ── */
     .main {
       flex: 1;
       display: flex;
@@ -84,7 +82,6 @@
       line-height: 1.6;
     }
 
-    /* ── Form card ── */
     .form-card {
       width: 100%;
       max-width: 300px;
@@ -113,7 +110,7 @@
       color: #1a1a1a;
       outline: none;
       transition: border-color 0.2s, background 0.2s;
-      margin-bottom: 14px;
+      margin-bottom: 4px;
     }
 
     input:focus {
@@ -121,7 +118,6 @@
       background-color: #fff;
     }
 
-    /* ── Buttons (same as index) ── */
     .btn-primary {
       width: 100%;
       padding: 13px 0;
@@ -136,10 +132,16 @@
       text-decoration: none;
       display: block;
       transition: background 0.2s;
+      margin-top: 10px;
     }
 
     .btn-primary:hover {
       background-color: #4a934a;
+    }
+
+    .btn-primary:disabled {
+      background-color: #a0c8a0;
+      cursor: not-allowed;
     }
 
     .bottom-text {
@@ -159,7 +161,31 @@
       text-decoration: underline;
     }
 
-    /* ── Loading overlay (same as index) ── */
+    .error-message {
+      color: #d9534f;
+      font-size: 12px;
+      margin-top: 2px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .success-message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 12px;
+      border-radius: 13px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
     #loading-screen {
       display: none;
       position: fixed;
@@ -207,16 +233,14 @@
 </head>
 <body>
 
-  <!-- Loading screen -->
   <div id="loading-screen">
     <div id="lottie-container"></div>
-    <p class="loading-label">Loading</p>
+    <p class="loading-label">Signing you in...</p>
     <div class="loading-dots">
       <span>●</span><span>●</span><span>●</span>
     </div>
   </div>
 
-  <!-- Top bar -->
   <div class="topbar">
     <a href="index.html" class="logo">
       <img src="avocado.svg" alt="Avocado Chat logo" />
@@ -224,7 +248,6 @@
     </a>
   </div>
 
-  <!-- Main -->
   <main class="main">
     <img src="Lock.svg" alt="End to end encryption" class="lock-icon" />
     <p class="tagline">Private &amp; Secure Messaging</p>
@@ -232,8 +255,15 @@
     <p class="hero-sub">soo excited to see you again!</p>
 
     <div class="form-card">
-      <label class="form-label" for="loginInput">Username or Email</label>
-      <input type="text" id="loginInput" placeholder="you@example.com" autocomplete="off" />
+      <label class="form-label" for="loginInput">Username</label>
+      <input type="text" id="loginInput" placeholder="Enter your username" autocomplete="off" />
+      <div class="error-message" id="loginError">Please enter your username</div>
+
+      <label class="form-label" for="passwordInput">Password</label>
+      <input type="password" id="passwordInput" placeholder="Enter your password" />
+      <div class="error-message" id="passwordError">Invalid username or password</div>
+
+      <div class="success-message" id="successMessage"></div>
 
       <button class="btn-primary" id="loginBtn">Log in</button>
 
@@ -243,51 +273,199 @@
     </div>
   </main>
 
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
   <script>
-    var destination = '';
-    var anim = null;
+    (function() {
+      // ==================== SUPABASE CONFIGURATION ====================
+      const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbmliZ3FmYW16Ynh3Y2Vnamd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTYwNzYsImV4cCI6MjA5OTE3MjA3Nn0.kxxKXHkUceloqQVg6JjWPBVCP_R-TQ7QRn6LKj9nuQ4';
 
-    // Same Lottie animation data from index.html
-    var LOTTIE_DATA = {"nm":"Main Scene","ddd":0,"h":512,"w":512,"meta":{"g":"@lottiefiles/creator@1.99.2"},"layers":[{"ty":0,"nm":"brown avocado","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[68.00001053412342,74.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"s":[100,100],"t":18}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[259.0000105341234,333.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[253.00001053412342,333.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[259.0000105341234,333.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[273.0000105341234,333.00000361943853],"t":48},{"s":[259.0000105341234,333.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":136,"h":149,"refId":"precomp_Shape Layer - SVG_8P5QGSWESo_4166aa65-26a6-4401-b099-5b4ca10ec52e","ind":1},{"ty":0,"nm":"black 1","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[17.999982770363715,17.00000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[78,79],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,17],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,91],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,29],"t":48},{"s":[78,92],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[304.9999827703637,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[289.9999827703637,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[306.9999827703637,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[344.9999827703637,180.00000361943853],"t":48},{"s":[311.9999827703637,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":36,"h":34,"refId":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","ind":2},{"ty":0,"nm":"white 1","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[23.499982770363715,23.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,38],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,112],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,50],"t":48},{"s":[100,113],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[304.9999827703637,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[289.9999827703637,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[306.9999827703637,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[344.9999827703637,180.00000361943853],"t":48},{"s":[311.9999827703637,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":47,"h":47,"refId":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","ind":3},{"ty":0,"nm":"black","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[17.999982770363715,17.00000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[78,79],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,17],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,91],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,29],"t":48},{"s":[78,92],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[207.99998277036372,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[192.99998277036372,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[209.99998277036372,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[247.99998277036372,180.00000361943853],"t":48},{"s":[214.99998277036372,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":36,"h":34,"refId":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","ind":4},{"ty":0,"nm":"white","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[23.499982770363715,23.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,38],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,112],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,50],"t":48},{"s":[100,113],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[207.99998277036372,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[192.99998277036372,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[209.99998277036372,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[247.99998277036372,180.00000361943853],"t":48},{"s":[214.99998277036372,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":47,"h":47,"refId":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","ind":5},{"ty":0,"nm":"avocado","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[134.843145291772,199.86364191363162]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[255.843145291772,255.86364191363162]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":270,"h":400,"refId":"precomp_Shape Layer - SVG_DxLTFpeOhc_d5f73ef6-8bd7-4027-a305-7bcbb835ae9b","ind":6}],"v":"5.7.0","fr":30,"op":64.98,"ip":0,"assets":[{"nm":"Ellipse 6","id":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 4","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 59","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 24","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[9.94,0],[0,9.39],[-9.94,0],[0,-9.39]],"o":[[0,9.39],[-9.94,0],[0,-9.39],[9.94,0],[0,0]],"v":[[36,17],[18,34],[0,17],[18,0],[36,17]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.0196,0.0196,0.0196]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 3","id":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 5","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 60","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 25","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[12.98,0],[0,12.98],[-12.98,0],[0,-12.98]],"o":[[0,12.98],[-12.98,0],[0,-12.98],[12.98,0],[0,0]],"v":[[47,23.5],[23.5,47],[0,23.5],[23.5,0],[47,23.5]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[1,1,1]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 1","id":"precomp_Shape Layer - SVG_DxLTFpeOhc_d5f73ef6-8bd7-4027-a305-7bcbb835ae9b","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 6","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 61","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 26","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[20.97,185.89],[14.36,24.49],[6.61,19.96],[45.08,0],[12.34,-41],[11.18,-18.87],[2.02,-31.72],[-68.46,1.1],[-5.48,0],[-6.84,-0.18]],"o":[[68.59,1.83],[-3.18,-28.21],[-10.75,-18.33],[-14.07,-42.47],[-48.12,0],[-5.99,19.9],[-16.2,27.35],[-11.34,178.16],[5.4,-0.09],[6.88,0],[0,0]],"v":[[155.2,399.37],[265.58,216.99],[230.66,139.85],[206.38,80.66],[134.59,0],[63.36,76.76],[39.83,136.66],[1.39,223.07],[118.23,399.17],[134.94,399.37],[155.2,399.37]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.2,0.7804,0.349]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 2","id":"precomp_Shape Layer - SVG_8P5QGSWESo_4166aa65-26a6-4401-b099-5b4ca10ec52e","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 7","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 62","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 27","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[37.56,0],[0,41.15],[-37.56,0],[0,-41.15]],"o":[[0,41.15],[-37.56,0],[0,-41.15],[37.56,0],[0,0]],"v":[[136,74.5],[68,149],[0,74.5],[68,0],[136,74.5]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.3412,0.149,0.149]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]}]};
-
-    function showLoading(url) {
-      destination = url;
-      var screen = document.getElementById('loading-screen');
-      screen.classList.add('active');
-
-      if (!anim) {
-        anim = lottie.loadAnimation({
-          container: document.getElementById('lottie-container'),
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-          animationData: LOTTIE_DATA
-        });
+      // Initialize Supabase client
+      let supabaseClient = null;
+      
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase client initialized successfully');
       } else {
-        anim.play();
+        console.warn('⚠️ Supabase SDK not loaded. Check your internet connection.');
       }
 
-      setTimeout(function() {
-        window.location.href = destination;
-      }, 2200);
-    }
+      // ==================== DOM ELEMENTS ====================
+      const loginInput = document.getElementById('loginInput');
+      const passwordInput = document.getElementById('passwordInput');
+      const loginBtn = document.getElementById('loginBtn');
+      const loadingScreen = document.getElementById('loading-screen');
+      const loginError = document.getElementById('loginError');
+      const passwordError = document.getElementById('passwordError');
+      const successMessage = document.getElementById('successMessage');
 
-    document.getElementById('loginBtn').addEventListener('click', function() {
-      var input = document.getElementById('loginInput').value.trim();
-      if (input === '') {
-        alert('Please enter your username or email.');
-        return;
-      }
-      showLoading('getstarted.html');
-    });
+      // ==================== LOTTIE ANIMATION ====================
+      let anim = null;
+      const LOTTIE_DATA = {"nm":"Main Scene","ddd":0,"h":512,"w":512,"meta":{"g":"@lottiefiles/creator@1.99.2"},"layers":[{"ty":0,"nm":"brown avocado","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[68.00001053412342,74.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"s":[100,100],"t":18}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[259.0000105341234,333.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[253.00001053412342,333.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[259.0000105341234,333.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[273.0000105341234,333.00000361943853],"t":48},{"s":[259.0000105341234,333.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":136,"h":149,"refId":"precomp_Shape Layer - SVG_8P5QGSWESo_4166aa65-26a6-4401-b099-5b4ca10ec52e","ind":1},{"ty":0,"nm":"black 1","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[17.999982770363715,17.00000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[78,79],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,17],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,91],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,29],"t":48},{"s":[78,92],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[304.9999827703637,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[289.9999827703637,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[306.9999827703637,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[344.9999827703637,180.00000361943853],"t":48},{"s":[311.9999827703637,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":36,"h":34,"refId":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","ind":2},{"ty":0,"nm":"white 1","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[23.499982770363715,23.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,38],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,112],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,50],"t":48},{"s":[100,113],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[304.9999827703637,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[289.9999827703637,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[306.9999827703637,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[344.9999827703637,180.00000361943853],"t":48},{"s":[311.9999827703637,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":47,"h":47,"refId":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","ind":3},{"ty":0,"nm":"black","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[17.999982770363715,17.00000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[78,79],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,17],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,91],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[78,29],"t":48},{"s":[78,92],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[207.99998277036372,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[192.99998277036372,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[209.99998277036372,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[247.99998277036372,180.00000361943853],"t":48},{"s":[214.99998277036372,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":36,"h":34,"refId":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","ind":4},{"ty":0,"nm":"white","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[23.499982770363715,23.50000361943853]},"s":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[100,100],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,38],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,112],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[100,50],"t":48},{"s":[100,113],"t":60}]},"sk":{"a":0,"k":0},"p":{"a":1,"k":[{"o":{"x":0.55,"y":0.06},"i":{"x":0.36,"y":1},"s":[207.99998277036372,180.00000361943853],"t":0},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[192.99998277036372,180.00000361943853],"t":18},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[209.99998277036372,180.00000361943853],"t":26},{"o":{"x":0.65,"y":0},"i":{"x":0.36,"y":1},"s":[247.99998277036372,180.00000361943853],"t":48},{"s":[214.99998277036372,180.00000361943853],"t":60}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":47,"h":47,"refId":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","ind":5},{"ty":0,"nm":"avocado","sr":1,"st":0,"op":64,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[134.843145291772,199.86364191363162]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[255.843145291772,255.86364191363162]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"w":270,"h":400,"refId":"precomp_Shape Layer - SVG_DxLTFpeOhc_d5f73ef6-8bd7-4027-a305-7bcbb835ae9b","ind":6}],"v":"5.7.0","fr":30,"op":64.98,"ip":0,"assets":[{"nm":"Ellipse 6","id":"precomp_Shape Layer - SVG_phF8fm8Nn9_7feb5da7-02d8-4a1f-ba48-4493c59f1ba3","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 4","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 59","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 24","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[9.94,0],[0,9.39],[-9.94,0],[0,-9.39]],"o":[[0,9.39],[-9.94,0],[0,-9.39],[9.94,0],[0,0]],"v":[[36,17],[18,34],[0,17],[18,0],[36,17]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.0196,0.0196,0.0196]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 3","id":"precomp_Shape Layer - SVG_j9axVJHH_a_eb55129d-e797-4c24-a3f1-eef52d5f1492","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 5","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 60","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 25","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[12.98,0],[0,12.98],[-12.98,0],[0,-12.98]],"o":[[0,12.98],[-12.98,0],[0,-12.98],[12.98,0],[0,0]],"v":[[47,23.5],[23.5,47],[0,23.5],[23.5,0],[47,23.5]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[1,1,1]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 1","id":"precomp_Shape Layer - SVG_DxLTFpeOhc_d5f73ef6-8bd7-4027-a305-7bcbb835ae9b","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 6","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 61","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 26","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[20.97,185.89],[14.36,24.49],[6.61,19.96],[45.08,0],[12.34,-41],[11.18,-18.87],[2.02,-31.72],[-68.46,1.1],[-5.48,0],[-6.84,-0.18]],"o":[[68.59,1.83],[-3.18,-28.21],[-10.75,-18.33],[-14.07,-42.47],[-48.12,0],[-5.99,19.9],[-16.2,27.35],[-11.34,178.16],[5.4,-0.09],[6.88,0],[0,0]],"v":[[155.2,399.37],[265.58,216.99],[230.66,139.85],[206.38,80.66],[134.59,0],[63.36,76.76],[39.83,136.66],[1.39,223.07],[118.23,399.17],[134.94,399.37],[155.2,399.37]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.2,0.7804,0.349]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]},{"nm":"Ellipse 2","id":"precomp_Shape Layer - SVG_8P5QGSWESo_4166aa65-26a6-4401-b099-5b4ca10ec52e","fr":30,"layers":[{"ty":4,"nm":"Shape Layer 7","sr":1,"st":0,"op":150,"ip":0,"hd":false,"ddd":0,"bm":0,"hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","bm":0,"hd":false,"nm":"Group 62","np":2,"it":[{"ty":"sh","bm":0,"hd":false,"nm":"Path 27","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[37.56,0],[0,41.15],[-37.56,0],[0,-41.15]],"o":[[0,41.15],[-37.56,0],[0,-41.15],[37.56,0],[0,0]],"v":[[136,74.5],[68,149],[0,74.5],[68,0],[136,74.5]]}}},{"ty":"fl","bm":0,"hd":false,"nm":"Fill","c":{"a":0,"k":[0.3412,0.149,0.149]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"sk":{"a":0,"k":0},"p":{"a":0,"k":[0,0]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1}]}]};
 
-    document.getElementById('loginInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('loginBtn').click();
+      function initLottie() {
+        if (!anim) {
+          anim = lottie.loadAnimation({
+            container: document.getElementById('lottie-container'),
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: LOTTIE_DATA
+          });
+        } else {
+          anim.play();
+        }
       }
-    });
+
+      // ==================== HELPER FUNCTIONS ====================
+      function hideAllErrors() {
+        loginError.classList.remove('show');
+        passwordError.classList.remove('show');
+        successMessage.classList.remove('show');
+      }
+
+      function showError(element) {
+        element.classList.add('show');
+      }
+
+      // ==================== SUPABASE LOGIN ====================
+      async function loginWithSupabase() {
+        hideAllErrors();
+
+        const username = loginInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        // Validate username
+        if (username === '') {
+          showError(loginError);
+          loginInput.focus();
+          return;
+        }
+
+        // Validate password
+        if (password === '') {
+          passwordError.textContent = 'Please enter your password';
+          showError(passwordError);
+          passwordInput.focus();
+          return;
+        }
+
+        // Disable button and show loading
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Signing in...';
+        loadingScreen.classList.add('active');
+
+        try {
+          // Construct the email from username (matching signup pattern)
+          const email = `${username.toLowerCase().replace(/\s+/g, '_')}@avocadochat.user`;
+
+          // Sign in with Supabase Auth
+          const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+
+          if (authError) {
+            if (authError.message.includes('Invalid login credentials') || 
+                authError.message.includes('Invalid email or password')) {
+              throw new Error('Invalid username or password. Please try again.');
+            }
+            throw authError;
+          }
+
+          // Successful login - store session
+          if (authData.session) {
+            localStorage.setItem('avocado_session', JSON.stringify({
+              user_id: authData.user.id,
+              username: username,
+              email: email,
+              access_token: authData.session.access_token
+            }));
+          }
+
+          // Show success and redirect
+          successMessage.textContent = '✅ Welcome back! Redirecting...';
+          successMessage.classList.add('show');
+          loginBtn.style.display = 'none';
+
+          setTimeout(function() {
+            window.location.href = 'getstarted.html';
+          }, 2000);
+
+        } catch (error) {
+          console.error('Login error:', error);
+          loadingScreen.classList.remove('active');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Log in';
+          
+          passwordError.textContent = error.message || 'An error occurred. Please try again.';
+          showError(passwordError);
+        }
+      }
+
+      // ==================== EVENT LISTENERS ====================
+      loginBtn.addEventListener('click', function() {
+        if (supabaseClient) {
+          loginWithSupabase();
+        } else {
+          // Fallback for demo/testing without Supabase
+          const username = loginInput.value.trim();
+          const password = passwordInput.value.trim();
+          
+          if (username === '') {
+            alert('Please enter your username.');
+            return;
+          }
+          if (password === '') {
+            alert('Please enter your password.');
+            return;
+          }
+          
+          // Store demo session
+          localStorage.setItem('avocado_session', JSON.stringify({
+            user_id: 'demo-user',
+            username: username,
+            access_token: 'demo-token'
+          }));
+          
+          loadingScreen.classList.add('active');
+          initLottie();
+          setTimeout(function() {
+            window.location.href = 'getstarted.html';
+          }, 2200);
+        }
+      });
+
+      // Enter key on username field
+      loginInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          passwordInput.focus();
+        }
+      });
+
+      // Enter key on password field
+      passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          loginBtn.click();
+        }
+      });
+
+      // Initialize Lottie when loading screen becomes active
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.target.classList.contains('active')) {
+            initLottie();
+          }
+        });
+      });
+
+      observer.observe(loadingScreen, { attributes: true, attributeFilter: ['class'] });
+
+    })();
   </script>
 </body>
 </html>
