@@ -2,27 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>Avocado Chat</title>
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* --- RESET AND FONTS --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: #e4e6e8; height: 100vh; width: 100vw; overflow: hidden; }
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background-color: #e4e6e8; }
+        .app-container { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-color: #f0f0f0; display: flex; overflow: hidden; }
 
-        /* --- MAIN CONTAINER (FULL SCREEN) --- */
-        .app-container { width: 100%; height: 100%; background-color: #f0f0f0; display: flex; overflow: hidden; }
+        /* ── CUSTOM SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #999; }
+        * { scrollbar-width: thin; scrollbar-color: #c0c0c0 transparent; }
 
-        /* --- LEFT SIDEBAR --- */
-        .sidebar-left { width: 280px; background-color: #f0f0f0; border-right: 1px solid #dcdcdc; display: flex; flex-direction: column; flex-shrink: 0; min-height: 0; }
+        /* ── LEFT SIDEBAR ── */
+        .sidebar-left { width: 280px; background-color: #f0f0f0; border-right: 1px solid #dcdcdc; display: flex; flex-direction: column; flex-shrink: 0; height: 100%; }
         .nav-item { padding: 15px 20px; cursor: pointer; color: #333; font-weight: 500; display: flex; align-items: center; gap: 12px; transition: background 0.2s; flex-shrink: 0; }
         .nav-item:hover { background-color: #e5e5e5; }
         .nav-item.active { background-color: #7eb07d; color: white; border-radius: 0 20px 20px 0; margin-right: 15px; }
         .nav-icon { font-size: 1.2rem; }
-        
         .content-area { flex: 1; overflow-y: auto; border-top: 1px solid #dcdcdc; padding-top: 10px; min-height: 0; }
-        
         .friend-card, .request-card { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #e9e9e9; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
         .friend-card:hover, .request-card:hover { background-color: #e5e5e5; }
         .friend-card.active-chat { background-color: #d9d9d9; }
@@ -30,25 +31,26 @@
         .btn-sm { padding: 5px 12px; border: none; border-radius: 15px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
         .btn-accept { background-color: #7eb07d; color: white; }
         .btn-reject { background-color: #ff4d4f; color: white; }
-        
-        .friend-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; color: #444; flex-shrink: 0; }
+        .avatar-wrap { position: relative; margin-right: 12px; flex-shrink: 0; }
+        .friend-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #444; }
+        .online-dot { position: absolute; bottom: 1px; right: 1px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #f0f0f0; background-color: #b0b0b0; }
+        .online-dot.online { background-color: #4cd964; }
         .friend-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
         .friend-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
         .friend-last-msg { font-size: 0.75rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; line-height: 1.2; }
-        .friend-last-msg.draft { color: #5aa65a; font-style: italic; }
         .badge { background-color: #ff3b30; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; flex-shrink: 0; }
-        
-        /* Bottom User Profile */
         .user-profile { padding: 15px; border-top: 1px solid #dcdcdc; display: flex; align-items: center; background-color: #f0f0f0; flex-shrink: 0; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #d9d9d9; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #7eb07d; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; }
         .user-status { display: flex; align-items: center; font-size: 0.8rem; color: #666; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #4cd964; margin-right: 5px; }
 
-        /* --- MIDDLE PANEL --- */
-        .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: #e4e6e8; border-right: 1px solid #dcdcdc; min-height: 0; }
-        .chat-header { padding: 20px; background-color: #e4e6e8; border-bottom: 1px solid #dcdcdc; font-size: 1.2rem; font-weight: 600; text-align: center; color: #333; flex-shrink: 0; }
-
-        /* Add Friend Area */
+        /* ── MIDDLE PANEL ── */
+        .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: #e4e6e8; border-right: 1px solid #dcdcdc; height: 100%; min-height: 0; overflow: hidden; }
+        .chat-header { padding: 15px 20px; background-color: #e4e6e8; border-bottom: 1px solid #dcdcdc; display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0; }
+        .chat-header-name { font-size: 1.1rem; font-weight: 600; color: #333; }
+        .chat-header-status { font-size: 0.75rem; color: #888; display: flex; align-items: center; gap: 4px; }
+        .chat-header-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #b0b0b0; }
+        .chat-header-dot.online { background-color: #4cd964; }
         .add-friend-area { padding: 30px; }
         .add-friend-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; }
         .add-friend-subtitle { font-size: 0.8rem; color: #666; margin-bottom: 15px; }
@@ -56,50 +58,115 @@
         .add-friend-input { flex: 1; border: none; background: transparent; outline: none; font-size: 0.9rem; color: #333; }
         .send-request-btn { background-color: #7eb07d; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: background 0.2s; flex-shrink: 0; }
         .send-request-btn:hover { background-color: #6a9c69; }
-        
-        /* Chat Messages & Timestamps */
+        #chatZone { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
         .chat-messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-color: #e4e6e8; min-height: 0; }
-        .message-wrapper { display: flex; flex-direction: column; max-width: 70%; }
+
+        /* ── MESSAGES ── */
+        .message-wrapper { display: flex; flex-direction: column; max-width: 70%; position: relative; }
         .message-wrapper.sent { align-self: flex-end; align-items: flex-end; }
         .message-wrapper.received { align-self: flex-start; align-items: flex-start; }
-        
-        .message { padding: 10px 15px; border-radius: 20px; font-size: 0.95rem; position: relative; word-wrap: break-word; width: fit-content; }
+        .message { padding: 10px 15px; border-radius: 20px; font-size: 0.95rem; word-wrap: break-word; width: fit-content; cursor: pointer; user-select: none; position: relative; }
         .message-wrapper.sent .message { background-color: #7eb07d; color: white; border-bottom-right-radius: 4px; }
         .message-wrapper.received .message { background-color: #ffffff; color: #333; border-bottom-left-radius: 4px; border: 1px solid #dcdcdc; }
-        
-        .timestamp { font-size: 0.65rem; color: #888; margin-top: 4px; padding: 0 5px; }
-        
-        /* Chat Input (FIXED ZOOM BUG) */
-        .chat-input-area { padding: 15px 20px; border-top: 1px solid #dcdcdc; background-color: #e4e6e8; display: flex; gap: 10px; flex-shrink: 0; min-height: 70px; }
-        .chat-input-area input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 30px; outline: none; background-color: #fff; font-size: 0.9rem; min-width: 0; }
+        .message.deleting { opacity: 0.4; pointer-events: none; }
+
+        /* Seen tick row */
+        .msg-meta { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+        .timestamp { font-size: 0.65rem; color: #888; padding: 0 2px; }
+        .seen-tick { display: flex; align-items: center; }
+        .seen-tick svg { width: 14px; height: 14px; }
+
+        /* ── CONTEXT MENU ── */
+        .ctx-menu {
+            position: fixed;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+            z-index: 9999;
+            min-width: 180px;
+            padding: 6px 0;
+            animation: menuIn 0.12s ease;
+        }
+        @keyframes menuIn { from { opacity:0; transform: scale(0.93); } to { opacity:1; transform: scale(1); } }
+        .ctx-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 16px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            color: #222;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .ctx-item:hover { background: #f4f4f4; }
+        .ctx-item.danger { color: #d0021b; }
+        .ctx-item.danger:hover { background: #fff0f0; }
+        .ctx-item.disabled { color: #bbb; cursor: not-allowed; pointer-events: none; }
+        .ctx-item svg { flex-shrink: 0; }
+        .ctx-divider { height: 1px; background: #efefef; margin: 4px 0; }
+        /* Submenu */
+        .ctx-submenu-wrap { position: relative; }
+        .ctx-submenu {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+            min-width: 200px;
+            padding: 6px 0;
+            z-index: 10000;
+        }
+        .ctx-submenu-wrap:hover .ctx-submenu { display: block; }
+        .ctx-arrow { margin-left: auto; opacity: 0.4; }
+
+        /* ── CHAT INPUT ── */
+        .chat-input-area { flex-shrink: 0; padding: 15px 20px; border-top: 1px solid #dcdcdc; background-color: #e4e6e8; display: flex; gap: 10px; align-items: center; }
+        .chat-input-area input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 30px; outline: none; background-color: #fff; font-size: 0.9rem; min-width: 0; height: 45px; }
         .chat-input-area input:focus { border-color: #7eb07d; }
-        .chat-send-btn { background-color: #7eb07d; color: white; border: none; padding: 0 25px; border-radius: 30px; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+        .chat-send-btn { background-color: #7eb07d; color: white; border: none; padding: 0 25px; border-radius: 30px; cursor: pointer; font-weight: 600; flex-shrink: 0; height: 45px; }
         .chat-send-btn:hover { background-color: #6a9c69; }
 
-        /* --- RIGHT SIDEBAR --- */
-        .sidebar-right { width: 250px; background-color: #f0f0f0; padding: 20px; flex-shrink: 0; }
-        .sidebar-right-title { font-size: 1rem; font-weight: 600; margin-bottom: 20px; }
+        /* ── RIGHT SIDEBAR ── */
+        .sidebar-right { width: 250px; background-color: #f0f0f0; padding: 20px; flex-shrink: 0; height: 100%; overflow-y: auto; }
+        .sidebar-right-title { font-size: 1rem; font-weight: 600; margin-bottom: 15px; }
         .no-friends-card { background-color: #d9d9d9; border-radius: 16px; padding: 20px; text-align: center; color: #333; }
         .no-friends-card h4 { margin-bottom: 5px; font-weight: 700; }
         .no-friends-card p { font-size: 0.8rem; color: #555; }
+        .online-friend-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #e5e5e5; cursor: pointer; }
+        .online-friend-item:last-child { border-bottom: none; }
+
+        #addFriendZone { flex-shrink: 0; }
+        #pendingZone { flex: 1; min-height: 0; overflow-y: auto; }
+
+        /* Toast notification */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 8px 18px; border-radius: 20px;
+            font-size: 0.82rem; z-index: 99999; opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
     </style>
 </head>
 <body>
-
 <div class="app-container">
     <!-- LEFT SIDEBAR -->
     <div class="sidebar-left">
         <div class="nav-item active" id="navFriends" onclick="switchMode('friends')"><span class="nav-icon">👥</span> Friends</div>
         <div class="nav-item" id="navPending" onclick="switchMode('pending')"><span class="nav-icon">👤</span> Pending</div>
-
         <div class="content-area" id="friendsList">
-            <div style="padding: 20px; text-align: center; color: #666; font-size: 0.9rem;">Loading friends...</div>
+            <div style="padding:20px;text-align:center;color:#666;font-size:0.9rem;">Loading friends...</div>
         </div>
-
         <div class="user-profile">
             <div class="user-avatar" id="currentUserAvatar">U</div>
             <div>
-                <div style="font-weight: 600;" id="currentUserName">User</div>
+                <div style="font-weight:600;" id="currentUserName">User</div>
                 <div class="user-status"><span class="status-dot"></span> online</div>
             </div>
         </div>
@@ -107,447 +174,631 @@
 
     <!-- MIDDLE PANEL -->
     <div class="chat-panel">
-        <div class="chat-header" id="chatHeader">👥 Friends</div>
+        <div class="chat-header" id="chatHeader">
+            <span style="font-size:1.2rem;">👥</span>
+            <span class="chat-header-name">Friends</span>
+        </div>
 
         <!-- ADD FRIEND ZONE -->
-        <div id="addFriendZone" style="display: block;">
+        <div id="addFriendZone" style="display:block;">
             <div class="add-friend-area">
                 <div class="add-friend-title">Add a Friend</div>
                 <div class="add-friend-subtitle">Connect with anyone who uses avocado chat</div>
                 <div class="add-friend-input-container">
-                    <input type="text" class="add-friend-input" id="friendInput" placeholder="Enter username...">
+                    <input type="text" class="add-friend-input" id="friendInput" placeholder="Enter username..." autocomplete="off">
                     <button class="send-request-btn" onclick="addNewFriend()">Send friend request</button>
                 </div>
-                <div id="friendError" style="color: red; margin-top: 10px; display: none;"></div>
+                <div id="friendError" style="color:red;margin-top:10px;display:none;"></div>
             </div>
         </div>
 
         <!-- CHAT ZONE -->
-        <div id="chatZone" style="display: none; flex-direction: column; height: 100%;">
+        <div id="chatZone" style="display:none;">
             <div class="chat-messages-container" id="messageContainer">
-                <div style="text-align:center; color:#888; margin-top:20px;">No messages yet. Say hi!</div>
+                <div style="text-align:center;color:#888;margin-top:20px;">No messages yet. Say hi!</div>
             </div>
             <div class="chat-input-area">
-                <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" autocorrect="off" spellcheck="true" onkeypress="handleKeyPress(event)">
                 <button class="chat-send-btn" onclick="sendMessage()">Send</button>
             </div>
         </div>
-        
+
         <!-- PENDING ZONE -->
-        <div id="pendingZone" style="display: none; flex-direction: column; padding: 20px; align-items: center; justify-content: center; height: 100%; color: #666;">
-            <h3 style="margin-bottom: 10px;">Friend Requests</h3>
-            <div id="pendingList" style="width: 100%; max-width: 400px;"></div>
+        <div id="pendingZone" style="display:none;flex-direction:column;padding:20px;align-items:center;justify-content:center;color:#666;">
+            <h3 style="margin-bottom:10px;">Friend Requests</h3>
+            <div id="pendingList" style="width:100%;max-width:400px;"></div>
         </div>
     </div>
 
     <!-- RIGHT SIDEBAR -->
     <div class="sidebar-right">
         <div class="sidebar-right-title">friends online</div>
-        <div class="no-friends-card">
-            <h4>Its so quiet here</h4>
-            <p>I can even hear grasshopper chirping</p>
+        <div id="onlineFriendsList">
+            <div class="no-friends-card">
+                <h4>Its so quiet here</h4>
+                <p>I can even hear grasshopper chirping</p>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Context Menu -->
+<div id="ctxMenu" class="ctx-menu" style="display:none;"></div>
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
 <script>
-    // ================================================================
-    // 1. SUPABASE CONFIGURATION
-    // ================================================================
-    const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbmliZ3FmYW16Ynh3Y2Vnamd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTYwNzYsImV4cCI6MjA5OTE3MjA3Nn0.kxxKXHkUceloqQVg6JjWPBVCP_R-TQ7QRn6LKj9nuQ4';
+// ================================================================
+// SVG ICON LIBRARY
+// ================================================================
+const ICONS = {
+    copy: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>`,
+    trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>`,
+    clock: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>`,
+    eye: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+    </svg>`,
+    eyeOff: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+        <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>`,
+    chevronRight: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+    </svg>`,
+    checkSingle: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M33.3334 10L15 28.3333L6.66669 20" stroke="#B3B3B3" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+     </svg>
 
-    if (typeof supabase === 'undefined') {
-        document.body.innerHTML = '<h1 style="color:red">Supabase SDK not loaded. Please check internet.</h1>';
+    </svg>`,
+    checkDouble: `<svg width="18" height="14" viewBox="0 0 28 14" fill="none" stroke="#4cd964" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 7 6 12 14 4"/>
+        <polyline points="8 7 13 12 21 4"/>
+    </svg>`,
+    checkDoubleGrey:  `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M33.3334 10L15 28.3333L6.66669 20" stroke="#B3B3B3" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+     </svg>`,
+};
+
+// ================================================================
+// SUPABASE
+// ================================================================
+const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbmliZ3FmYW16Ynh3Y2Vnamd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTYwNzYsImV4cCI6MjA5OTE3MjA3Nn0.kxxKXHkUceloqQVg6JjWPBVCP_R-TQ7QRn6LKj9nuQ4';
+if (typeof supabase === 'undefined') { document.body.innerHTML = '<h1 style="color:red">Supabase SDK not loaded.</h1>'; }
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ================================================================
+// STATE
+// ================================================================
+let currentUserId = null;
+let currentUserUsername = null;
+let friends = [];
+let currentChatId = null;
+let messageSubscription = null;
+let presenceChannel = null;
+let currentMode = 'friends';
+let onlineUserIds = new Set();
+// Map of msgId -> { seenAt, seenByFriend }
+let seenMessages = {};
+// Timed delete timers: msgId -> timeoutId
+let deleteTimers = {};
+
+// DOM refs
+const friendsList      = document.getElementById('friendsList');
+const addFriendZone    = document.getElementById('addFriendZone');
+const chatZone         = document.getElementById('chatZone');
+const pendingZone      = document.getElementById('pendingZone');
+const pendingList      = document.getElementById('pendingList');
+const messageContainer = document.getElementById('messageContainer');
+const chatHeader       = document.getElementById('chatHeader');
+const friendInput      = document.getElementById('friendInput');
+const messageInput     = document.getElementById('messageInput');
+const currentUserName  = document.getElementById('currentUserName');
+const currentUserAvatar= document.getElementById('currentUserAvatar');
+const friendError      = document.getElementById('friendError');
+const navFriends       = document.getElementById('navFriends');
+const navPending       = document.getElementById('navPending');
+const onlineFriendsList= document.getElementById('onlineFriendsList');
+const ctxMenu          = document.getElementById('ctxMenu');
+const toastEl          = document.getElementById('toast');
+
+// ================================================================
+// TOAST
+// ================================================================
+function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 2000);
+}
+
+// ================================================================
+// AUTH
+// ================================================================
+async function checkAuthAndLoad() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    currentUserId = session.user.id;
+    const { data: profile } = await _supabase.from('profiles').select('username').eq('id', currentUserId).single();
+    if (profile) {
+        currentUserUsername = profile.username;
+        currentUserName.innerText = currentUserUsername;
+        currentUserAvatar.innerText = currentUserUsername.charAt(0).toUpperCase();
     }
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    await loadFriends();
+    setupPresence();
+}
 
-    // ================================================================
-    // 2. GLOBAL STATE
-    // ================================================================
-    let currentUserId = null;
-    let currentUserUsername = null;
-    let friends = []; 
-    let currentChatId = null;
-    let messageSubscription = null;
-    let currentMode = 'friends';
-
-    // DOM Refs
-    const friendsList = document.getElementById('friendsList');
-    const addFriendZone = document.getElementById('addFriendZone');
-    const chatZone = document.getElementById('chatZone');
-    const pendingZone = document.getElementById('pendingZone');
-    const pendingList = document.getElementById('pendingList');
-    const messageContainer = document.getElementById('messageContainer');
-    const chatHeader = document.getElementById('chatHeader');
-    const friendInput = document.getElementById('friendInput');
-    const messageInput = document.getElementById('messageInput');
-    const currentUserName = document.getElementById('currentUserName');
-    const currentUserAvatar = document.getElementById('currentUserAvatar');
-    const friendError = document.getElementById('friendError');
-    const navFriends = document.getElementById('navFriends');
-    const navPending = document.getElementById('navPending');
-
-    // ================================================================
-    // 3. AUTHENTICATION & SETUP
-    // ================================================================
-    async function checkAuthAndLoad() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) {
-            window.location.href = 'index.html'; 
-            return;
-        }
-
-        currentUserId = session.user.id;
-        const { data: profile, error } = await _supabase.from('profiles').select('username').eq('id', currentUserId).single();
-
-        if (error || !profile) {
-            console.error("Error fetching username", error);
-        } else {
-            currentUserUsername = profile.username;
-            currentUserName.innerText = currentUserUsername;
-            currentUserAvatar.innerText = currentUserUsername.charAt(0).toUpperCase();
-        }
-        await loadFriends();
-    }
-
-    // ================================================================
-    // 4. NAVIGATION
-    // ================================================================
-    function switchMode(mode) {
-        currentMode = mode;
-        navFriends.className = mode === 'friends' ? 'nav-item active' : 'nav-item';
-        navPending.className = mode === 'pending' ? 'nav-item active' : 'nav-item';
-
-        if (messageSubscription) { _supabase.removeChannel(messageSubscription); messageSubscription = null; }
-        
-        addFriendZone.style.display = 'none';
-        chatZone.style.display = 'none';
-        pendingZone.style.display = 'none';
-
-        if (mode === 'friends') {
-            chatHeader.innerText = '👥 Friends';
-            addFriendZone.style.display = 'block';
-            loadFriends();
-        } else if (mode === 'pending') {
-            chatHeader.innerText = '👤 Pending Requests';
-            pendingZone.style.display = 'flex';
-            loadPendingRequests();
-        }
-    }
-
-    // ================================================================
-    // 5. FRIEND & PREVIEW LOGIC (New Feature)
-    // ================================================================
-    async function loadFriends() {
-        const { data: friendRelations, error: fError } = await _supabase
-            .from('friends')
-            .select('friend_id')
-            .eq('user_id', currentUserId)
-            .eq('status', 'accepted');
-
-        if (fError) { console.error("Error loading friends", fError); return; }
-
-        if (!friendRelations || friendRelations.length === 0) {
-            friendsList.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No friends yet.<br>Add one above!</div>`;
-            friends = [];
-            return;
-        }
-
-        const friendIds = friendRelations.map(r => r.friend_id);
-        const { data: profiles, error: pError } = await _supabase.from('profiles').select('id, username').in('id', friendIds);
-        if (pError) { console.error("Error fetching profiles", pError); return; }
-
-        friends = profiles.map(p => ({ id: p.id, name: p.username, unread: 0, lastMsg: null, lastSender: null }));
-        
-        // Fetch last message for each friend efficiently
-        await populateLastMessages(friendIds);
-        
-        renderFriendsList();
-    }
-
-    async function populateLastMessages(friendIds) {
-        // This creates an array of promises to fetch the last message for every friend
-        const promises = friends.map(async (friend) => {
-            const { data: msgs, error } = await _supabase
-                .from('messages')
-                .select('sender_id, content, created_at')
-                .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${friend.id}),and(sender_id.eq.${friend.id},receiver_id.eq.${currentUserId})`)
-                .order('created_at', { ascending: false })
-                .limit(1);
-                
-            if (!error && msgs && msgs.length > 0) {
-                friend.lastMsg = msgs[0].content;
-                friend.lastSender = msgs[0].sender_id;
-                friend.lastTime = new Date(msgs[0].created_at);
+// ================================================================
+// PRESENCE
+// ================================================================
+function setupPresence() {
+    presenceChannel = _supabase.channel('online-users', { config: { presence: { key: currentUserId } } });
+    presenceChannel
+        .on('presence', { event: 'sync' }, () => {
+            onlineUserIds = new Set(Object.keys(presenceChannel.presenceState()));
+            renderFriendsList(); renderOnlineSidebar(); updateChatHeader();
+        })
+        .on('presence', { event: 'join' }, ({ key }) => {
+            onlineUserIds.add(key); renderFriendsList(); renderOnlineSidebar(); updateChatHeader();
+        })
+        .on('presence', { event: 'leave' }, ({ key }) => {
+            onlineUserIds.delete(key); renderFriendsList(); renderOnlineSidebar(); updateChatHeader();
+        })
+        .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await presenceChannel.track({ user_id: currentUserId, online_at: new Date().toISOString() });
             }
         });
-        await Promise.all(promises);
-    }
+}
+function isOnline(userId) { return onlineUserIds.has(userId); }
 
-    function renderFriendsList() {
-        friendsList.innerHTML = '';
-        if (friends.length === 0) {
-            friendsList.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No friends yet.<br>Add one above!</div>`;
-            return;
+// ================================================================
+// NAVIGATION
+// ================================================================
+function switchMode(mode) {
+    currentMode = mode;
+    navFriends.className = mode === 'friends' ? 'nav-item active' : 'nav-item';
+    navPending.className = mode === 'pending' ? 'nav-item active' : 'nav-item';
+    if (messageSubscription) { _supabase.removeChannel(messageSubscription); messageSubscription = null; }
+    addFriendZone.style.display = 'none';
+    chatZone.style.display = 'none';
+    pendingZone.style.display = 'none';
+    if (mode === 'friends') {
+        chatHeader.innerHTML = '<span style="font-size:1.2rem;">👥</span><span class="chat-header-name">Friends</span>';
+        addFriendZone.style.display = 'block';
+        loadFriends();
+    } else {
+        chatHeader.innerHTML = '<span style="font-size:1.2rem;">👤</span><span class="chat-header-name">Pending Requests</span>';
+        pendingZone.style.display = 'flex';
+        loadPendingRequests();
+    }
+}
+
+// ================================================================
+// FRIENDS LIST
+// ================================================================
+async function loadFriends() {
+    const { data: fr, error: fError } = await _supabase.from('friends').select('friend_id').eq('user_id', currentUserId).eq('status', 'accepted');
+    if (fError) { console.error(fError); return; }
+    if (!fr || fr.length === 0) {
+        friendsList.innerHTML = `<div style="padding:20px;text-align:center;color:#888;">No friends yet.<br>Add one above!</div>`;
+        friends = []; renderOnlineSidebar(); return;
+    }
+    const ids = fr.map(r => r.friend_id);
+    const { data: profiles } = await _supabase.from('profiles').select('id, username').in('id', ids);
+    friends = profiles.map(p => ({ id: p.id, name: p.username, unread: 0, lastMsg: null, lastSender: null }));
+    await populateLastMessages();
+    renderFriendsList(); renderOnlineSidebar();
+}
+
+async function populateLastMessages() {
+    await Promise.all(friends.map(async (f) => {
+        const { data: msgs } = await _supabase.from('messages').select('sender_id, content, created_at')
+            .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${f.id}),and(sender_id.eq.${f.id},receiver_id.eq.${currentUserId})`)
+            .order('created_at', { ascending: false }).limit(1);
+        if (msgs && msgs.length > 0) { f.lastMsg = msgs[0].content; f.lastSender = msgs[0].sender_id; }
+    }));
+}
+
+function renderFriendsList() {
+    friendsList.innerHTML = '';
+    if (friends.length === 0) { friendsList.innerHTML = `<div style="padding:20px;text-align:center;color:#888;">No friends yet.<br>Add one above!</div>`; return; }
+    friends.forEach(friend => {
+        const card = document.createElement('div');
+        card.className = `friend-card ${currentChatId === friend.id ? 'active-chat' : ''}`;
+        card.onclick = () => openChat(friend.id);
+        const avatarWrap = document.createElement('div');
+        avatarWrap.className = 'avatar-wrap';
+        const av = document.createElement('div');
+        av.className = 'friend-avatar';
+        av.style.backgroundColor = '#d9d9d9';
+        av.innerText = friend.name.charAt(0).toUpperCase();
+        const dot = document.createElement('div');
+        dot.className = 'online-dot' + (isOnline(friend.id) ? ' online' : '');
+        avatarWrap.appendChild(av); avatarWrap.appendChild(dot);
+        const info = document.createElement('div'); info.className = 'friend-info';
+        const nm = document.createElement('div'); nm.className = 'friend-name'; nm.innerText = friend.name;
+        const pv = document.createElement('div'); pv.className = 'friend-last-msg';
+        if (friend.lastMsg) { pv.innerText = (friend.lastSender === currentUserId ? 'You: ' : `${friend.name}: `) + friend.lastMsg; }
+        else { pv.innerText = 'Start chatting...'; pv.style.color = '#999'; }
+        info.appendChild(nm); info.appendChild(pv);
+        card.appendChild(avatarWrap); card.appendChild(info);
+        if (friend.unread > 0) {
+            const badge = document.createElement('div'); badge.className = 'badge'; badge.innerText = friend.unread;
+            card.appendChild(badge);
         }
-        friends.forEach(friend => {
-            const card = document.createElement('div');
-            card.className = `friend-card ${currentChatId === friend.id ? 'active-chat' : ''}`;
-            card.onclick = () => openChat(friend.id);
+        friendsList.appendChild(card);
+    });
+}
 
-            const avatar = document.createElement('div');
-            avatar.className = `friend-avatar`;
-            avatar.style.backgroundColor = '#d9d9d9';
-            avatar.innerText = friend.name.charAt(0).toUpperCase();
+function renderOnlineSidebar() {
+    const online = friends.filter(f => isOnline(f.id));
+    if (online.length === 0) {
+        onlineFriendsList.innerHTML = `<div class="no-friends-card"><h4>Its so quiet here</h4><p>I can even hear grasshopper chirping</p></div>`;
+        return;
+    }
+    onlineFriendsList.innerHTML = '';
+    online.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'online-friend-item';
+        item.onclick = () => openChat(f.id);
+        item.innerHTML = `
+            <div style="width:34px;height:34px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#444;font-size:0.85rem;flex-shrink:0;">${f.name.charAt(0).toUpperCase()}</div>
+            <div style="font-size:0.85rem;font-weight:500;">${f.name}</div>
+            <div style="margin-left:auto;width:9px;height:9px;border-radius:50%;background:#4cd964;flex-shrink:0;"></div>`;
+        onlineFriendsList.appendChild(item);
+    });
+}
 
-            const info = document.createElement('div');
-            info.className = 'friend-info';
-            
-            const name = document.createElement('div');
-            name.className = 'friend-name';
-            name.innerText = friend.name;
-            info.appendChild(name);
+function updateChatHeader() {
+    if (!currentChatId) return;
+    const friend = friends.find(f => f.id === currentChatId);
+    if (!friend) return;
+    const online = isOnline(currentChatId);
+    chatHeader.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span class="chat-header-name">👤 ${friend.name}</span>
+        <span class="chat-header-status"><span class="chat-header-dot ${online ? 'online' : ''}"></span>${online ? 'Online' : 'Offline'}</span>
+    </div>`;
+}
 
-            // Show Draft/Last Message preview
-            const preview = document.createElement('div');
-            preview.className = 'friend-last-msg';
-            if (friend.lastMsg) {
-                // Check if last sender is the current user ("You: xxx")
-                const prefix = friend.lastSender === currentUserId ? 'You: ' : `${friend.name}: `;
-                preview.innerText = prefix + friend.lastMsg;
-            } else {
-                preview.innerText = 'Start chatting...';
-                preview.style.color = '#999';
-            }
-            info.appendChild(preview);
+// ================================================================
+// ADD FRIEND
+// ================================================================
+async function addNewFriend() {
+    const username = friendInput.value.trim();
+    friendError.style.display = 'none';
+    if (!username) { friendError.innerText = "Please enter a username."; friendError.style.display = 'block'; return; }
+    const { data: targetUser } = await _supabase.from('profiles').select('id').eq('username', username).maybeSingle();
+    if (!targetUser) { friendError.innerText = "User not found."; friendError.style.display = 'block'; return; }
+    if (targetUser.id === currentUserId) { friendError.innerText = "You cannot add yourself."; friendError.style.display = 'block'; return; }
+    const { data: existing } = await _supabase.from('friends').select('id').eq('user_id', currentUserId).eq('friend_id', targetUser.id).maybeSingle();
+    if (existing) { friendError.innerText = "Friend already added."; friendError.style.display = 'block'; return; }
+    const { error } = await _supabase.from('friends').insert({ user_id: currentUserId, friend_id: targetUser.id, status: 'pending' });
+    if (error) { friendError.innerText = "Error adding friend."; friendError.style.display = 'block'; return; }
+    friendInput.value = '';
+    showToast("Friend request sent!");
+}
 
-            card.appendChild(avatar);
-            card.appendChild(info);
+// ================================================================
+// PENDING REQUESTS
+// ================================================================
+async function loadPendingRequests() {
+    pendingList.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">Loading...</div>';
+    const { data: requests } = await _supabase.from('friends').select('user_id').eq('friend_id', currentUserId).eq('status', 'pending');
+    if (!requests || requests.length === 0) { pendingList.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No pending requests.</div>'; return; }
+    const ids = requests.map(r => r.user_id);
+    const { data: profiles } = await _supabase.from('profiles').select('id, username').in('id', ids);
+    pendingList.innerHTML = '';
+    profiles.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'request-card';
+        card.innerHTML = `
+            <div class="friend-avatar" style="background:#d9d9d9;">${p.username.charAt(0).toUpperCase()}</div>
+            <div class="friend-info"><div class="friend-name">${p.username}</div></div>
+            <div class="request-actions">
+                <button class="btn-sm btn-accept" onclick="respondToRequest('${p.id}','accepted')">Accept</button>
+                <button class="btn-sm btn-reject" onclick="respondToRequest('${p.id}','rejected')">Reject</button>
+            </div>`;
+        pendingList.appendChild(card);
+    });
+}
 
-            if (friend.unread > 0) {
-                const badge = document.createElement('div');
-                badge.className = 'badge';
-                badge.innerText = friend.unread;
-                card.appendChild(badge);
-            }
-            friendsList.appendChild(card);
-        });
+async function respondToRequest(requesterId, status) {
+    await _supabase.from('friends').update({ status }).eq('user_id', requesterId).eq('friend_id', currentUserId);
+    loadPendingRequests();
+    if (status === 'accepted') loadFriends();
+}
+
+// ================================================================
+// CHAT OPEN
+// ================================================================
+async function openChat(friendId) {
+    currentChatId = friendId;
+    const friend = friends.find(f => f.id === friendId);
+    friend.unread = 0;
+    addFriendZone.style.display = 'none';
+    chatZone.style.display = 'flex';
+    pendingZone.style.display = 'none';
+    updateChatHeader();
+    renderFriendsList();
+    await loadMessages(friendId);
+    if (messageSubscription) { _supabase.removeChannel(messageSubscription); }
+    subscribeToNewMessages(friendId);
+}
+
+// ================================================================
+// LOAD & RENDER MESSAGES
+// ================================================================
+async function loadMessages(friendId) {
+    messageContainer.innerHTML = '<div style="text-align:center;color:#888;margin-top:20px;">Loading messages...</div>';
+    const { data: messages, error } = await _supabase.from('messages').select('*')
+        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId})`)
+        .order('created_at', { ascending: true });
+    if (error) { messageContainer.innerHTML = '<div style="text-align:center;color:red;">Error loading chat.</div>'; return; }
+
+    // Mark received messages as seen
+    const unseen = (messages || []).filter(m => m.sender_id === friendId && !m.seen_at);
+    if (unseen.length > 0) {
+        await _supabase.from('messages').update({ seen_at: new Date().toISOString() })
+            .in('id', unseen.map(m => m.id));
+        unseen.forEach(m => m.seen_at = new Date().toISOString());
     }
 
-    async function addNewFriend() {
-        const username = friendInput.value.trim();
-        friendError.style.display = 'none';
-        if (!username) { friendError.innerText = "Please enter a username."; friendError.style.display = 'block'; return; }
+    messageContainer.innerHTML = '';
+    if (!messages || messages.length === 0) {
+        messageContainer.innerHTML = '<div style="text-align:center;color:#888;margin-top:20px;">No messages yet. Say hi!</div>';
+        return;
+    }
+    messages.forEach(msg => appendMessageToDOM(msg));
+    messageContainer.scrollTop = messageContainer.scrollHeight;
+}
 
-        const { data: targetUser, error: uError } = await _supabase.from('profiles').select('id').eq('username', username).maybeSingle();
-        if (uError || !targetUser) { friendError.innerText = "User not found."; friendError.style.display = 'block'; return; }
-        if (targetUser.id === currentUserId) { friendError.innerText = "You cannot add yourself."; friendError.style.display = 'block'; return; }
+function appendMessageToDOM(msg, prepend = false) {
+    const isSent = msg.sender_id === currentUserId;
+    const isSeen = !!msg.seen_at;
 
-        const { data: existing } = await _supabase.from('friends').select('id').eq('user_id', currentUserId).eq('friend_id', targetUser.id).maybeSingle();
-        if (existing) { friendError.innerText = "Friend already added."; friendError.style.display = 'block'; return; }
+    const wrapper = document.createElement('div');
+    wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}`;
+    wrapper.dataset.msgId = msg.id || '';
+    wrapper.dataset.isSent = isSent ? '1' : '0';
+    wrapper.dataset.seen = isSeen ? '1' : '0';
+    wrapper.dataset.content = msg.content;
 
-        const { error: iError } = await _supabase.from('friends').insert({ user_id: currentUserId, friend_id: targetUser.id, status: 'pending' });
-        if (iError) { friendError.innerText = "Error adding friend."; friendError.style.display = 'block'; console.error(iError); return; }
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message';
+    msgDiv.innerText = msg.content;
 
-        friendInput.value = '';
-        alert("Friend request sent!");
+    // Right-click / long-press for context menu (sent messages only)
+    if (isSent) {
+        msgDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); showCtxMenu(e, wrapper); });
+        msgDiv.addEventListener('click', (e) => { showCtxMenu(e, wrapper); });
     }
 
-    // ================================================================
-    // 6. PENDING REQUESTS
-    // ================================================================
-    async function loadPendingRequests() {
-        pendingList.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading requests...</div>';
-        const { data: requests, error: rError } = await _supabase
-            .from('friends')
-            .select('user_id')
-            .eq('friend_id', currentUserId)
-            .eq('status', 'pending');
+    wrapper.appendChild(msgDiv);
 
-        if (rError) { console.error(rError); pendingList.innerHTML = '<div style="color:red;">Error loading requests</div>'; return; }
-        if (!requests || requests.length === 0) {
-            pendingList.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">No pending requests.</div>';
-            return;
-        }
+    // Meta row: timestamp + seen tick
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    const ts = document.createElement('span');
+    ts.className = 'timestamp';
+    ts.innerText = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    meta.appendChild(ts);
 
-        const requesterIds = requests.map(r => r.user_id);
-        const { data: profiles } = await _supabase.from('profiles').select('id, username').in('id', requesterIds);
+    if (isSent) {
+        const tick = document.createElement('span');
+        tick.className = 'seen-tick';
+        tick.innerHTML = isSeen ? ICONS.checkDouble : ICONS.checkDoubleGrey;
+        tick.title = isSeen ? 'Seen' : 'Delivered';
+        meta.appendChild(tick);
+    }
 
-        pendingList.innerHTML = '';
-        profiles.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'request-card';
-            card.innerHTML = `
-                <div class="friend-avatar" style="background:#d9d9d9;">${p.username.charAt(0).toUpperCase()}</div>
-                <div class="friend-info"><div class="friend-name">${p.username}</div></div>
-                <div class="request-actions">
-                    <button class="btn-sm btn-accept" onclick="respondToRequest('${p.id}', 'accepted')">Accept</button>
-                    <button class="btn-sm btn-reject" onclick="respondToRequest('${p.id}', 'rejected')">Reject</button>
+    wrapper.appendChild(meta);
+
+    if (prepend) { messageContainer.insertBefore(wrapper, messageContainer.firstChild); }
+    else { messageContainer.appendChild(wrapper); }
+}
+
+// ================================================================
+// CONTEXT MENU
+// ================================================================
+function showCtxMenu(e, wrapper) {
+    e.stopPropagation();
+    closeCtxMenu();
+
+    const msgId    = wrapper.dataset.msgId;
+    const isSeen   = wrapper.dataset.seen === '1';
+    const content  = wrapper.dataset.content;
+
+    // Build menu HTML
+    ctxMenu.innerHTML = `
+        <!-- Copy -->
+        <div class="ctx-item" id="ctx-copy">
+            ${ICONS.copy} Copy
+        </div>
+        <div class="ctx-divider"></div>
+
+        <!-- Delete now -->
+        <div class="ctx-item danger" id="ctx-delete">
+            ${ICONS.trash} Delete
+        </div>
+
+        <!-- Delete after viewed -->
+        <div class="ctx-item danger ${isSeen ? 'disabled' : ''}" id="ctx-delete-viewed" title="${isSeen ? 'Already seen by recipient' : 'Delete when recipient views it'}">
+            ${isSeen ? ICONS.eyeOff : ICONS.eye} Delete after viewed ${isSeen ? '<span style="font-size:0.75rem;color:#bbb;margin-left:4px;">(already seen)</span>' : ''}
+        </div>
+
+        <!-- Delete after time (submenu) -->
+        <div class="ctx-submenu-wrap">
+            <div class="ctx-item danger" id="ctx-delete-timer">
+                ${ICONS.clock} Delete after…
+                <span class="ctx-arrow">${ICONS.chevronRight}</span>
+            </div>
+            <div class="ctx-submenu" id="ctx-submenu">
+                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 5)">
+                    ${ICONS.clock} 5 minutes
                 </div>
-            `;
-            pendingList.appendChild(card);
-        });
+                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 10)">
+                    ${ICONS.clock} 10 minutes
+                </div>
+                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 15)">
+                    ${ICONS.clock} 15 minutes
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Wire up actions
+    ctxMenu.querySelector('#ctx-copy').onclick = () => { navigator.clipboard.writeText(content); showToast('Copied!'); closeCtxMenu(); };
+    ctxMenu.querySelector('#ctx-delete').onclick = () => { deleteMessage(msgId); closeCtxMenu(); };
+    if (!isSeen) {
+        ctxMenu.querySelector('#ctx-delete-viewed').onclick = () => { registerDeleteOnView(msgId); showToast('Will delete when seen'); closeCtxMenu(); };
     }
 
-    async function respondToRequest(requesterId, status) {
-        const { error } = await _supabase
-            .from('friends')
-            .update({ status: status })
-            .eq('user_id', requesterId)
-            .eq('friend_id', currentUserId);
+    // Position menu near click/tap
+    const x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 200);
+    const y = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 200);
+    ctxMenu.style.display = 'block';
 
-        if (error) { alert("Error updating request."); console.error(error); return; }
-        loadPendingRequests(); 
-        if (status === 'accepted') loadFriends(); 
-    }
+    // Keep inside viewport
+    const mw = ctxMenu.offsetWidth || 200;
+    const mh = ctxMenu.offsetHeight || 160;
+    ctxMenu.style.left = (x + mw > window.innerWidth ? x - mw : x) + 'px';
+    ctxMenu.style.top  = (y + mh > window.innerHeight ? y - mh : y) + 'px';
+}
 
-    // ================================================================
-    // 7. CHAT LOGIC (REALTIME)
-    // ================================================================
-    async function openChat(friendId) {
-        currentChatId = friendId;
-        const friend = friends.find(f => f.id === friendId);
-        friend.unread = 0;
+function closeCtxMenu() { ctxMenu.style.display = 'none'; ctxMenu.innerHTML = ''; }
+document.addEventListener('click', closeCtxMenu);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMenu(); });
 
-        addFriendZone.style.display = 'none';
-        chatZone.style.display = 'flex';
-        pendingZone.style.display = 'none';
-        chatHeader.innerText = `👤 ${friend.name}`;
-        renderFriendsList();
-        
-        await loadMessages(friendId);
+// ================================================================
+// DELETE MESSAGE
+// ================================================================
+async function deleteMessage(msgId) {
+    if (!msgId) return;
+    // Visual fade-out
+    const wrapper = document.querySelector(`[data-msg-id="${msgId}"]`);
+    if (wrapper) { wrapper.querySelector('.message').classList.add('deleting'); }
 
-        if (messageSubscription) { _supabase.removeChannel(messageSubscription); }
-        subscribeToNewMessages(friendId);
-    }
+    // Cancel any pending timer
+    if (deleteTimers[msgId]) { clearTimeout(deleteTimers[msgId]); delete deleteTimers[msgId]; }
 
-    async function loadMessages(friendId) {
-        messageContainer.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">Loading messages...</div>';
-        const { data: messages, error } = await _supabase
-            .from('messages')
-            .select('*')
-            .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId})`)
-            .order('created_at', { ascending: true });
+    const { error } = await _supabase.from('messages').delete().eq('id', msgId).eq('sender_id', currentUserId);
+    if (error) { console.error('Delete error', error); showToast('Could not delete'); if (wrapper) wrapper.querySelector('.message').classList.remove('deleting'); return; }
+    if (wrapper) wrapper.remove();
+    showToast('Message deleted');
+}
 
-        if (error) { console.error("Error loading messages", error); messageContainer.innerHTML = '<div style="text-align:center; color:red;">Error loading chat.</div>'; return; }
-        renderMessages(messages);
-    }
+// ================================================================
+// TIMED DELETE
+// ================================================================
+function scheduleDelete(msgId, minutes) {
+    closeCtxMenu();
+    if (!msgId) return;
+    if (deleteTimers[msgId]) { clearTimeout(deleteTimers[msgId]); }
+    const ms = minutes * 60 * 1000;
+    deleteTimers[msgId] = setTimeout(() => deleteMessage(msgId), ms);
+    showToast(`Will delete in ${minutes} min`);
+}
 
-    function renderMessages(messages) {
-        messageContainer.innerHTML = '';
-        if (!messages || messages.length === 0) {
-            messageContainer.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">No messages yet. Say hi!</div>';
-            return;
-        }
+// ================================================================
+// DELETE ON VIEW
+// Stores in localStorage; checked when realtime update says seen_at set
+// ================================================================
+function registerDeleteOnView(msgId) {
+    if (!msgId) return;
+    const key = `dov_${msgId}`;
+    // Use a simple in-memory set (no localStorage to respect sandbox)
+    deleteOnViewSet.add(msgId);
+}
+const deleteOnViewSet = new Set();
 
-        messages.forEach(msg => {
-            const wrapper = document.createElement('div');
-            const isSent = msg.sender_id === currentUserId;
-            wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}`;
-            
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message';
-            msgDiv.innerText = msg.content;
-            wrapper.appendChild(msgDiv);
+// ================================================================
+// REALTIME SUBSCRIPTION
+// ================================================================
+function getChatChannelName(a, b) { const s = [a, b].sort(); return `chat-${s[0]}-${s[1]}`; }
 
-            const timeDiv = document.createElement('div');
-            timeDiv.className = 'timestamp';
-            const date = new Date(msg.created_at);
-            timeDiv.innerText = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            wrapper.appendChild(timeDiv);
+function subscribeToNewMessages(friendId) {
+    const channelName = getChatChannelName(currentUserId, friendId);
+    messageSubscription = _supabase.channel(channelName)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+            const msg = payload.new;
+            const relevant = (
+                (msg.sender_id === currentUserId && msg.receiver_id === friendId) ||
+                (msg.sender_id === friendId && msg.receiver_id === currentUserId)
+            );
+            if (!relevant || msg.sender_id === currentUserId) return;
 
-            messageContainer.appendChild(wrapper);
-        });
-        messageContainer.scrollTop = messageContainer.scrollHeight;
-    }
-
-    function subscribeToNewMessages(friendId) {
-        messageSubscription = _supabase
-            .channel(`chat:${currentUserId}-${friendId}`)
-            .on(
-                'postgres_changes',
-                { 
-                    event: 'INSERT', 
-                    schema: 'public', 
-                    table: 'messages',
-                    filter: `or(sender_id=eq.${friendId},receiver_id=eq.${friendId})` 
-                },
-                (payload) => {
-                    const newMessage = payload.new;
-                    if ((newMessage.sender_id === currentUserId || newMessage.sender_id === friendId) &&
-                        (newMessage.receiver_id === currentUserId || newMessage.receiver_id === friendId)) {
-                        
-                        if (currentChatId === friendId) {
-                            // Append message instantly
-                            const wrapper = document.createElement('div');
-                            const isSent = newMessage.sender_id === currentUserId;
-                            wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}`;
-                            
-                            const msgDiv = document.createElement('div');
-                            msgDiv.className = 'message';
-                            msgDiv.innerText = newMessage.content;
-                            wrapper.appendChild(msgDiv);
-
-                            const timeDiv = document.createElement('div');
-                            timeDiv.className = 'timestamp';
-                            const date = new Date(newMessage.created_at);
-                            timeDiv.innerText = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            wrapper.appendChild(timeDiv);
-
-                            messageContainer.appendChild(wrapper);
-                            messageContainer.scrollTop = messageContainer.scrollHeight;
-                        } else {
-                            // Update badge and Preview in Sidebar
-                            const friend = friends.find(f => f.id === friendId);
-                            if (friend) { 
-                                friend.unread += 1; 
-                                // Update preview text immediately without a DB refetch
-                                const prefix = newMessage.sender_id === currentUserId ? 'You: ' : `${friend.name}: `;
-                                friend.lastMsg = newMessage.content;
-                                friend.lastSender = newMessage.sender_id;
-                                renderFriendsList(); 
-                            }
-                        }
-                    }
+            if (currentChatId === friendId) {
+                // Mark seen immediately since we're in the chat
+                await _supabase.from('messages').update({ seen_at: new Date().toISOString() }).eq('id', msg.id);
+                msg.seen_at = new Date().toISOString();
+                appendMessageToDOM(msg);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            } else {
+                const f = friends.find(x => x.id === friendId);
+                if (f) { f.unread += 1; f.lastMsg = msg.content; f.lastSender = msg.sender_id; renderFriendsList(); }
+            }
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
+            const msg = payload.new;
+            // If the other person has now seen our message, update the tick
+            if (msg.sender_id === currentUserId && msg.seen_at) {
+                const wrapper = document.querySelector(`[data-msg-id="${msg.id}"]`);
+                if (wrapper) {
+                    wrapper.dataset.seen = '1';
+                    const tick = wrapper.querySelector('.seen-tick');
+                    if (tick) { tick.innerHTML = ICONS.checkDouble; tick.title = 'Seen'; }
                 }
-            )
-            .subscribe();
-    }
+                // Check delete-on-view
+                if (deleteOnViewSet.has(msg.id)) {
+                    deleteOnViewSet.delete(msg.id);
+                    deleteMessage(msg.id);
+                }
+            }
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+            // Remove from DOM if the other person deleted a message
+            const wrapper = document.querySelector(`[data-msg-id="${payload.old.id}"]`);
+            if (wrapper) wrapper.remove();
+        })
+        .subscribe();
+}
 
-    async function sendMessage() {
-        if (currentChatId === null) return;
-        const text = messageInput.value.trim();
-        if (!text) return;
+// ================================================================
+// SEND MESSAGE
+// ================================================================
+async function sendMessage() {
+    if (!currentChatId) return;
+    const text = messageInput.value.trim();
+    if (!text) return;
 
-        // Optimistic update
-        const wrapper = document.createElement('div');
-        wrapper.className = 'message-wrapper sent';
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message';
-        msgDiv.innerText = text;
-        wrapper.appendChild(msgDiv);
-        
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'timestamp';
-        timeDiv.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        wrapper.appendChild(timeDiv);
+    // Optimistic — no id yet so we use a temp placeholder
+    const tempId = 'temp_' + Date.now();
+    const optimistic = { id: tempId, sender_id: currentUserId, receiver_id: currentChatId, content: text, created_at: new Date().toISOString(), seen_at: null };
+    appendMessageToDOM(optimistic);
+    messageContainer.scrollTop = messageContainer.scrollHeight;
+    messageInput.value = '';
 
-        messageContainer.appendChild(wrapper);
-        messageContainer.scrollTop = messageContainer.scrollHeight;
-        messageInput.value = '';
+    const friend = friends.find(f => f.id === currentChatId);
+    if (friend) { friend.lastMsg = text; friend.lastSender = currentUserId; renderFriendsList(); }
 
-        const { error } = await _supabase.from('messages').insert({
-            sender_id: currentUserId,
-            receiver_id: currentChatId,
-            content: text
-        });
-        if (error) { console.error("Error sending message:", error); alert("Failed to send message."); }
-    }
+    const { data, error } = await _supabase.from('messages').insert({ sender_id: currentUserId, receiver_id: currentChatId, content: text }).select().single();
+    if (error) { console.error(error); showToast('Failed to send'); return; }
 
-    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+    // Swap temp id for real id so delete/seen tracking works
+    const wrapper = document.querySelector(`[data-msg-id="${tempId}"]`);
+    if (wrapper && data) { wrapper.dataset.msgId = data.id; }
+}
 
-    document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
+function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
 </script>
 </body>
 </html>
