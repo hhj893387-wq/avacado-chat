@@ -4,7 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
   <title>Avocado Chat • Sign up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --green: #58CC02;
+      --green-dark: #46A302;
+      --teal: #2F9E8F;
+      --bg: #FBFAF6;
+      --text: #3C3C3C;
+      --text-light: #85806F;
+      --border: #E2DCCC;
+      --card: #F0ECE1;
+      --red: #FF4B4B;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -12,15 +27,16 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background-color: #e0e0dc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      color: var(--text);
     }
 
     .topbar {
-      padding: 18px 24px;
+      padding: 20px 24px;
       display: flex;
       align-items: center;
     }
@@ -28,16 +44,17 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      color: #1a1a1a;
+      gap: 9px;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
       text-decoration: none;
+      letter-spacing: -0.2px;
     }
 
     .logo img {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       object-fit: contain;
     }
 
@@ -47,50 +64,59 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 30px 20px 50px;
+      padding: 24px 20px 50px;
     }
 
     .card {
       width: 100%;
-      max-width: 360px;
+      max-width: 340px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
 
-    .lock-icon {
-      width: 24px;
-      height: 24px;
-      object-fit: contain;
+    .icon-badge {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       align-self: center;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
+    .icon-badge svg { width: 28px; height: 28px; }
 
     .tagline {
       font-size: 12px;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #666;
-      font-weight: 500;
+      color: var(--green-dark);
+      font-weight: 700;
       text-align: center;
     }
 
     .hero-title {
-      font-size: 30px;
-      font-weight: 700;
-      color: #1a1a1a;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text);
       text-align: center;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.4px;
     }
 
     .hero-sub {
-      font-size: 13.5px;
-      color: #666;
+      font-size: 14px;
+      color: var(--text-light);
       text-align: center;
       max-width: 270px;
       margin: 0 auto;
       line-height: 1.6;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
+    .hero-sub svg { width: 14px; height: 14px; flex-shrink: 0; }
 
     .form-group {
       display: flex;
@@ -98,36 +124,168 @@
       gap: 6px;
     }
 
+    /* ── Username field with inline validation status ── */
+    .username-field {
+      position: relative;
+      width: 100%;
+    }
+
+    .username-field input {
+      padding-right: 44px;
+    }
+
+    .username-status {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .username-status .spinner {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      border-top-color: var(--teal);
+      animation: spin 0.7s linear infinite;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .username-status.checking .spinner { opacity: 1; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .username-status svg {
+      position: absolute;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .username-status.available svg.icon-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .username-status.taken svg.icon-x {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .username-status.taken svg.icon-x {
+      animation: shake 0.35s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: scale(1) translateX(0); }
+      25% { transform: scale(1) translateX(-3px); }
+      50% { transform: scale(1) translateX(3px); }
+      75% { transform: scale(1) translateX(-2px); }
+    }
+
+    .icon-check .checkmark-path {
+      stroke-dasharray: 20;
+      stroke-dashoffset: 20;
+      animation: draw 0.35s ease forwards;
+    }
+
+    .username-status.available svg.icon-check .checkmark-path {
+      animation: draw 0.35s ease forwards;
+    }
+
+    @keyframes draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* ── Password field with eye toggle ── */
+    .password-field {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-field input {
+      padding-right: 46px;
+    }
+
+    .eye-toggle {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-light);
+      border-radius: 9px;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+
+    .eye-toggle:hover { color: var(--text); background: var(--card); }
+
+    .eye-toggle .eye-path,
+    .eye-toggle .eye-slash {
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      transform-origin: center;
+    }
+
+    .eye-toggle .eye-slash {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+
+    .eye-toggle.visible .eye-path {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+
+    .eye-toggle.visible .eye-slash {
+      opacity: 1;
+      transform: scale(1);
+    }
+
     .form-label {
-      font-size: 14px;
-      font-weight: 500;
-      color: #1a1a1a;
-      margin-left: 4px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-left: 2px;
     }
 
     input, select {
       width: 100%;
-      height: 48px;
+      height: 50px;
       border-radius: 13px;
-      border: 1.5px solid #bbb;
-      background-color: white;
+      border: 2px solid var(--border);
+      background-color: var(--card);
       padding: 0 14px;
       font-size: 15px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      color: #1a1a1a;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 500;
+      color: var(--text);
       outline: none;
       transition: border-color 0.2s, background 0.2s;
-      background: #fff;
     }
 
     input:focus, select:focus {
-      border-color: #5aa65a;
+      border-color: var(--teal);
       background-color: #fff;
     }
 
     select {
       appearance: none;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23777E90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
       background-repeat: no-repeat;
       background-position: right 14px center;
       background-size: 16px;
@@ -144,43 +302,125 @@
       flex: 1;
     }
 
+    /* ── Custom birthday picker ── */
+    .picker {
+      position: relative;
+      flex: 1;
+    }
+
+    .picker-trigger {
+      width: 100%;
+      height: 50px;
+      border-radius: 13px;
+      border: 2px solid var(--border);
+      background-color: var(--card);
+      padding: 0 12px;
+      font-size: 14.5px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .picker-trigger.filled { color: var(--text); font-weight: 600; }
+
+    .picker.open .picker-trigger,
+    .picker-trigger:focus {
+      border-color: var(--teal);
+      background-color: #fff;
+    }
+
+    .picker-chevron {
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+      color: var(--text-light);
+    }
+
+    .picker.open .picker-chevron { transform: rotate(180deg); }
+
+    .picker-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #fff;
+      border: 2px solid var(--border);
+      border-radius: 13px;
+      box-shadow: none;
+      z-index: 20;
+      padding: 6px;
+    }
+
+    .picker.open .picker-panel { display: block; }
+
+    .picker-option {
+      padding: 9px 10px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .picker-option:hover { background: var(--card); }
+
+    .picker-option.selected {
+      background: rgba(88,204,2,0.14);
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
     .btn-primary {
       width: 100%;
-      padding: 13px 0;
-      background-color: #5aa65a;
+      padding: 15px 0;
+      background-color: var(--green);
       color: white;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 700;
       border: none;
       border-radius: 13px;
       cursor: pointer;
       text-align: center;
       text-decoration: none;
       display: block;
-      transition: background 0.2s;
-      margin-top: 8px;
+      box-shadow: none;
+      transition: background-color 0.25s ease, color 0.25s ease, transform 0.08s ease;
+      margin-top: 6px;
+      letter-spacing: -0.1px;
     }
 
-    .btn-primary:hover {
-      background-color: #4a934a;
-    }
+    .btn-primary:not(:disabled):hover { filter: brightness(1.04); }
+    .btn-primary:not(:disabled):active { transform: translateY(1px) scale(0.99); }
 
     .btn-primary:disabled {
-      background-color: #a0c8a0;
+      background-color: #D8D8D2;
+      color: #A8A69C;
+      box-shadow: none;
       cursor: not-allowed;
+      transform: none;
     }
 
     .bottom-text {
-      margin-top: 10px;
-      font-size: 13px;
-      color: #666;
+      margin-top: 8px;
+      font-size: 13.5px;
+      color: var(--text-light);
       text-align: center;
+      font-weight: 500;
     }
 
     .bottom-text a {
-      color: #5aa65a;
+      color: var(--teal);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .bottom-text a:hover {
@@ -188,9 +428,10 @@
     }
 
     .error-message {
-      color: #d9534f;
-      font-size: 12px;
-      margin-top: -4px;
+      color: var(--red);
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-top: -2px;
       display: none;
     }
 
@@ -206,7 +447,7 @@
     .step.active {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
 
     @keyframes fade {
@@ -218,7 +459,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background-color: #e0e0dc;
+      background-color: #fff;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -236,18 +477,20 @@
     }
 
     .loading-label {
-      font-size: 12px;
-      color: #666;
-      letter-spacing: 0.05em;
-      font-weight: 500;
+      font-size: 13px;
+      color: var(--text-light);
+      letter-spacing: 0.03em;
+      font-weight: 600;
     }
 
+    .loading-dots { display: flex; gap: 6px; }
     .loading-dots span {
       display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
       animation: blink 1.2s infinite;
-      font-size: 12px;
-      color: #5aa65a;
-      margin: 0 2px;
     }
 
     .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
@@ -259,11 +502,12 @@
     }
 
     .success-message {
-      background-color: #d4edda;
-      color: #155724;
+      background-color: #D7FFB8;
+      color: var(--green-dark);
       padding: 12px;
       border-radius: 13px;
       font-size: 14px;
+      font-weight: 700;
       text-align: center;
       display: none;
     }
@@ -279,7 +523,7 @@
     <div id="lottie-container"></div>
     <p class="loading-label">Creating your account...</p>
     <div class="loading-dots">
-      <span>●</span><span>●</span><span>●</span>
+      <span></span><span></span><span></span>
     </div>
   </div>
 
@@ -294,20 +538,40 @@
     <div class="card">
       <!-- STEP 1: username -->
       <div class="step active" id="step1">
-        <img src="Lock.svg" alt="End to end encryption" class="lock-icon" />
-        <p class="tagline">Private & Secure Messaging</p>
+        <div class="icon-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#58CC02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="16" height="10" rx="2"/>
+            <path d="M7 10V7a5 5 0 0 1 10 0v3"/>
+          </svg>
+        </div>
+        <p class="tagline">Private &amp; Secure Messaging</p>
         <h1 class="hero-title">Sign up</h1>
-        <p class="hero-sub">End to End Encrypted 🔒</p>
+        <p class="hero-sub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#777E90" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+          End to end encrypted
+        </p>
 
         <div class="form-group">
           <label class="form-label" for="usernameInput">Create your username</label>
-          <input type="text" id="usernameInput" placeholder="you" autocomplete="off" />
+          <div class="username-field">
+            <input type="text" id="usernameInput" placeholder="you" autocomplete="off" />
+            <div class="username-status" id="usernameStatus">
+              <div class="spinner"></div>
+              <svg class="icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#58CC02" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path class="checkmark-path" d="M4 12.5l5 5L20 6.5"/>
+              </svg>
+              <svg class="icon-x" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4B4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="6" y1="6" x2="18" y2="18"/>
+                <line x1="18" y1="6" x2="6" y2="18"/>
+              </svg>
+            </div>
+          </div>
           <div class="error-message" id="usernameError">Please enter a username</div>
         </div>
 
         <div class="success-message" id="successMessage"></div>
 
-        <button class="btn-primary" id="nextBtn">Next</button>
+        <button class="btn-primary" id="nextBtn" disabled>Next</button>
 
         <div class="bottom-text">
           Already have an account? <a href="login.html">Log in</a>
@@ -316,21 +580,60 @@
 
       <!-- STEP 2: password + birthday -->
       <div class="step" id="step2">
-        <img src="Lock.svg" alt="End to end encryption" class="lock-icon" />
-        <p class="tagline">Private & Secure Messaging</p>
+        <div class="icon-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#58CC02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="16" height="10" rx="2"/>
+            <path d="M7 10V7a5 5 0 0 1 10 0v3"/>
+          </svg>
+        </div>
+        <p class="tagline">Private &amp; Secure Messaging</p>
         <h1 class="hero-title">Sign up</h1>
-        <p class="hero-sub">End to End Encrypted 🔒</p>
+        <p class="hero-sub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#777E90" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+          End to end encrypted
+        </p>
 
         <div class="form-group">
           <label class="form-label" for="passwordInput">Password</label>
-          <input type="password" id="passwordInput" placeholder="At least 8 characters" />
+          <div class="password-field">
+            <input type="password" id="passwordInput" placeholder="At least 8 characters" />
+            <button type="button" class="eye-toggle" id="eyeToggle" aria-label="Show password">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path class="eye-path" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+                <circle class="eye-path" cx="12" cy="12" r="3"/>
+                <path class="eye-slash" d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.24 4.24M9.9 4.24A11 11 0 0 1 12 4c7 0 11 7 11 7a13.2 13.2 0 0 1-3.1 3.9M6.1 6.1A13.2 13.2 0 0 0 1 11s4 7 11 7a10.9 10.9 0 0 0 4.24-.86"/>
+              </svg>
+            </button>
+          </div>
           <div class="error-message" id="passwordError">Password must be at least 8 characters</div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Birthday</label>
           <div class="row">
-            <select id="monthSelect">
+            <div class="picker" data-select="monthSelect">
+              <button type="button" class="picker-trigger" id="monthTrigger">
+                <span class="picker-value">Month</span>
+                <svg class="picker-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="picker-panel" id="monthPanel"></div>
+            </div>
+            <div class="picker" data-select="daySelect">
+              <button type="button" class="picker-trigger" id="dayTrigger">
+                <span class="picker-value">Day</span>
+                <svg class="picker-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="picker-panel" id="dayPanel"></div>
+            </div>
+            <div class="picker" data-select="yearSelect">
+              <button type="button" class="picker-trigger" id="yearTrigger">
+                <span class="picker-value">Year</span>
+                <svg class="picker-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="picker-panel" id="yearPanel"></div>
+            </div>
+            <!-- Hidden native selects hold the actual values used by the sign-up logic -->
+            <select id="monthSelect" style="display:none">
               <option value="">Month</option>
               <option value="January">January</option>
               <option value="February">February</option>
@@ -345,17 +648,17 @@
               <option value="November">November</option>
               <option value="December">December</option>
             </select>
-            <select id="daySelect">
+            <select id="daySelect" style="display:none">
               <option value="">Day</option>
             </select>
-            <select id="yearSelect">
+            <select id="yearSelect" style="display:none">
               <option value="">Year</option>
             </select>
           </div>
           <div class="error-message" id="birthdayError">Please select your full birthday</div>
         </div>
 
-        <button class="btn-primary" id="signupBtn">Sign up</button>
+        <button class="btn-primary" id="signupBtn" disabled>Sign up</button>
 
         <div class="bottom-text">
           Already have an account? <a href="login.html">Log in</a>
@@ -400,6 +703,87 @@
       const passwordError = document.getElementById('passwordError');
       const birthdayError = document.getElementById('birthdayError');
       const successMessage = document.getElementById('successMessage');
+      const usernameStatus = document.getElementById('usernameStatus');
+      const eyeToggle = document.getElementById('eyeToggle');
+      const passwordInputEl = document.getElementById('passwordInput');
+
+      // ==================== PASSWORD VISIBILITY TOGGLE ====================
+      eyeToggle.addEventListener('click', function() {
+        const isVisible = passwordInputEl.type === 'text';
+        passwordInputEl.type = isVisible ? 'password' : 'text';
+        eyeToggle.classList.toggle('visible', !isVisible);
+        eyeToggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+      });
+
+      // ==================== USERNAME AVAILABILITY CHECK (debounced) ====================
+      let usernameAvailable = false;
+      let usernameCheckTimer = null;
+      let usernameCheckToken = 0;
+
+      function setUsernameStatus(state) {
+        usernameStatus.classList.remove('checking', 'available', 'taken');
+        if (state) usernameStatus.classList.add(state);
+      }
+
+      async function checkUsernameAvailability(username) {
+        const token = ++usernameCheckToken;
+        setUsernameStatus('checking');
+
+        let taken = false;
+        try {
+          if (supabaseClient) {
+            const email = `${username.toLowerCase().replace(/\s+/g, '_')}@avocadochat.user`;
+            const { data, error } = await supabaseClient
+              .from('profiles')
+              .select('id')
+              .eq('username', username)
+              .limit(1);
+
+            if (!error && data && data.length > 0) {
+              taken = true;
+            } else if (error) {
+              // Fallback: check local demo storage if the profiles table lookup failed
+              const users = JSON.parse(localStorage.getItem('avocado_users') || '[]');
+              taken = users.some(u => u.username.toLowerCase() === username.toLowerCase());
+            }
+          } else {
+            const users = JSON.parse(localStorage.getItem('avocado_users') || '[]');
+            taken = users.some(u => u.username.toLowerCase() === username.toLowerCase());
+          }
+        } catch (e) {
+          console.warn('Username availability check failed:', e.message);
+        }
+
+        // Ignore stale responses if the user kept typing
+        if (token !== usernameCheckToken) return;
+
+        usernameAvailable = !taken;
+        setUsernameStatus(taken ? 'taken' : 'available');
+        updateNextButtonState();
+        updateSignupButtonState();
+      }
+
+      function updateNextButtonState() {
+        const username = usernameInput.value.trim();
+        nextBtn.disabled = !(username.length >= 3 && usernameAvailable);
+      }
+
+      usernameInput.addEventListener('input', function() {
+        const username = usernameInput.value.trim();
+        clearTimeout(usernameCheckTimer);
+        usernameAvailable = false;
+        updateNextButtonState();
+        updateSignupButtonState();
+
+        if (username.length < 3) {
+          setUsernameStatus(null);
+          return;
+        }
+
+        usernameCheckTimer = setTimeout(function() {
+          checkUsernameAvailability(username);
+        }, 400);
+      });
 
       // ==================== POPULATE DAY & YEAR ====================
       function populateDays() {
@@ -425,6 +809,61 @@
 
       populateDays();
       populateYears();
+
+      // ==================== CUSTOM BIRTHDAY PICKERS ====================
+      // Builds a custom dropdown UI on top of a hidden native <select>,
+      // keeping the select's value in sync so the rest of the sign-up
+      // logic (which reads monthSelect.value / daySelect.value / yearSelect.value)
+      // works unchanged.
+      function buildPicker(pickerEl) {
+        const selectId = pickerEl.getAttribute('data-select');
+        const selectEl = document.getElementById(selectId);
+        const trigger = pickerEl.querySelector('.picker-trigger');
+        const valueEl = trigger.querySelector('.picker-value');
+        const panel = pickerEl.querySelector('.picker-panel');
+
+        function render() {
+          panel.innerHTML = '';
+          Array.from(selectEl.options).forEach(opt => {
+            if (opt.value === '') return; // skip the placeholder
+            const row = document.createElement('div');
+            row.className = 'picker-option' + (selectEl.value === opt.value ? ' selected' : '');
+            row.textContent = opt.textContent;
+            row.dataset.value = opt.value;
+            row.addEventListener('click', () => {
+              selectEl.value = opt.value;
+              valueEl.textContent = opt.textContent;
+              trigger.classList.add('filled');
+              closePicker();
+              selectEl.dispatchEvent(new Event('change'));
+            });
+            panel.appendChild(row);
+          });
+        }
+
+        function openPicker() {
+          document.querySelectorAll('.picker.open').forEach(p => { if (p !== pickerEl) p.classList.remove('open'); });
+          render();
+          pickerEl.classList.add('open');
+        }
+
+        function closePicker() {
+          pickerEl.classList.remove('open');
+        }
+
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (pickerEl.classList.contains('open')) { closePicker(); } else { openPicker(); }
+        });
+
+        pickerEl._refresh = render;
+      }
+
+      const pickers = Array.from(document.querySelectorAll('.picker')).map(buildPicker);
+
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.picker.open').forEach(p => p.classList.remove('open'));
+      });
 
       // ==================== VALIDATION HELPERS ====================
       function hideAllErrors() {
@@ -456,10 +895,29 @@
           return;
         }
 
+        if (!usernameAvailable) {
+          usernameError.textContent = 'This username is not available';
+          showError(usernameError);
+          usernameInput.focus();
+          return;
+        }
+
         usernameError.textContent = 'Please enter a username';
         step1.classList.remove('active');
         step2.classList.add('active');
       }
+
+      // ==================== SIGN-UP BUTTON STATE (step 2) ====================
+      function updateSignupButtonState() {
+        const passwordFilled = passwordInputEl.value.trim().length > 0;
+        const birthdayComplete = !!(monthSelect.value && daySelect.value && yearSelect.value);
+        signupBtn.disabled = !(usernameAvailable && passwordFilled && birthdayComplete);
+      }
+
+      passwordInputEl.addEventListener('input', updateSignupButtonState);
+      monthSelect.addEventListener('change', updateSignupButtonState);
+      daySelect.addEventListener('change', updateSignupButtonState);
+      yearSelect.addEventListener('change', updateSignupButtonState);
 
       // ==================== SUPABASE SIGN UP (NO EMAIL CONFIRMATION) ====================
       async function signUpWithSupabase() {
@@ -574,7 +1032,7 @@
           }
 
           // Success - show message and redirect
-          successMessage.textContent = '✅ Account created! Redirecting...';
+          successMessage.textContent = 'Account created! Redirecting...';
           successMessage.classList.add('show');
           signupBtn.style.display = 'none';
 
