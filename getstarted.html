@@ -312,12 +312,11 @@ let friends = [];
 let currentChatId = null;
 let messageSubscription = null;
 let presenceChannel = null;
+let friendsSubscription = null;   // ← NEW: watches friends table for this user
 let currentMode = 'friends';
 let onlineUserIds = new Set();
-// Map of msgId -> { seenAt, seenByFriend }
-let seenMessages = {};
-// Timed delete timers: msgId -> timeoutId
-let deleteTimers = {};
+const deleteOnViewSet = new Set();
+const deleteTimers = {};
 
 // DOM refs
 const friendsList      = document.getElementById('friendsList');
@@ -338,7 +337,6 @@ const onlineFriendsList= document.getElementById('onlineFriendsList');
 const ctxMenu          = document.getElementById('ctxMenu');
 const toastEl          = document.getElementById('toast');
 
-// Header icon markup (inline SVG, no emoji)
 const HEADER_ICON_FRIENDS = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 const HEADER_ICON_PENDING = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>`;
 const HEADER_ICON_PERSON  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
@@ -367,6 +365,7 @@ async function checkAuthAndLoad() {
     }
     await loadFriends();
     setupPresence();
+    setupFriendsSubscription(); // ← NEW
 }
 
 // ================================================================
@@ -394,6 +393,60 @@ function setupPresence() {
 function isOnline(userId) { return onlineUserIds.has(userId); }
 
 // ================================================================
+// FRIENDS REALTIME SUBSCRIPTION
+// Watches the friends table for rows where friend_id = currentUserId
+// so that when someone's request is accepted (INSERT of reciprocal row)
+// this user's sidebar updates immediately without a page refresh.
+// ================================================================
+function setupFriendsSubscription() {
+    if (friendsSubscription) { _supabase.removeChannel(friendsSubscription); }
+
+    friendsSubscription = _supabase
+        .channel(`friends-for-${currentUserId}`)
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'friends',
+                // Only care about rows where I am the friend_id (i.e. someone added me)
+                filter: `friend_id=eq.${currentUserId}`
+            },
+            async (payload) => {
+                const row = payload.new;
+                // If a new accepted friendship row appeared for us, reload the friends list
+                if (row.status === 'accepted') {
+                    await loadFriends();
+                    showToast('A new friend appeared!');
+                }
+            }
+        )
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'friends',
+                // Also watch rows where I am user_id — so if the original request row
+                // gets its status updated to accepted, my list reloads too.
+                filter: `user_id=eq.${currentUserId}`
+            },
+            async (payload) => {
+                const row = payload.new;
+                if (row.status === 'accepted') {
+                    // The person we sent a request to accepted it — reload friends
+                    const alreadyInList = friends.some(f => f.id === row.friend_id);
+                    if (!alreadyInList) {
+                        await loadFriends();
+                        showToast('Your friend request was accepted!');
+                    }
+                }
+            }
+        )
+        .subscribe();
+}
+
+// ================================================================
 // NAVIGATION
 // ================================================================
 function switchMode(mode) {
@@ -419,7 +472,12 @@ function switchMode(mode) {
 // FRIENDS LIST
 // ================================================================
 async function loadFriends() {
-    const { data: fr, error: fError } = await _supabase.from('friends').select('friend_id').eq('user_id', currentUserId).eq('status', 'accepted');
+    const { data: fr, error: fError } = await _supabase
+        .from('friends')
+        .select('friend_id')
+        .eq('user_id', currentUserId)
+        .eq('status', 'accepted');
+
     if (fError) { console.error(fError); return; }
     if (!fr || fr.length === 0) {
         friendsList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-light);font-weight:500;">No friends yet.<br>Add one above!</div>`;
@@ -427,9 +485,21 @@ async function loadFriends() {
     }
     const ids = fr.map(r => r.friend_id);
     const { data: profiles } = await _supabase.from('profiles').select('id, username').in('id', ids);
-    friends = profiles.map(p => ({ id: p.id, name: p.username, unread: 0, lastMsg: null, lastSender: null }));
+
+    // Preserve unread counts for friends already in list
+    const unreadMap = {};
+    friends.forEach(f => { unreadMap[f.id] = f.unread || 0; });
+
+    friends = profiles.map(p => ({
+        id: p.id,
+        name: p.username,
+        unread: unreadMap[p.id] || 0,
+        lastMsg: null,
+        lastSender: null
+    }));
     await populateLastMessages();
-    renderFriendsList(); renderOnlineSidebar();
+    renderFriendsList();
+    renderOnlineSidebar();
 }
 
 async function populateLastMessages() {
@@ -443,7 +513,10 @@ async function populateLastMessages() {
 
 function renderFriendsList() {
     friendsList.innerHTML = '';
-    if (friends.length === 0) { friendsList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-light);font-weight:500;">No friends yet.<br>Add one above!</div>`; return; }
+    if (friends.length === 0) {
+        friendsList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-light);font-weight:500;">No friends yet.<br>Add one above!</div>`;
+        return;
+    }
     friends.forEach(friend => {
         const card = document.createElement('div');
         card.className = `friend-card ${currentChatId === friend.id ? 'active-chat' : ''}`;
@@ -525,7 +598,10 @@ async function addNewFriend() {
 async function loadPendingRequests() {
     pendingList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-weight:500;">Loading...</div>';
     const { data: requests } = await _supabase.from('friends').select('user_id').eq('friend_id', currentUserId).eq('status', 'pending');
-    if (!requests || requests.length === 0) { pendingList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-weight:500;">No pending requests.</div>'; return; }
+    if (!requests || requests.length === 0) {
+        pendingList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-weight:500;">No pending requests.</div>';
+        return;
+    }
     const ids = requests.map(r => r.user_id);
     const { data: profiles } = await _supabase.from('profiles').select('id, username').in('id', ids);
     pendingList.innerHTML = '';
@@ -543,10 +619,63 @@ async function loadPendingRequests() {
     });
 }
 
+// ================================================================
+// RESPOND TO FRIEND REQUEST — THE CORE FIX
+//
+// Old code only updated the original row's status to 'accepted'.
+// That meant:
+//   • The sender (user_id) had a row: user_id=A, friend_id=B, status='accepted'  ✓
+//   • The receiver (friend_id=B) had NO row with user_id=B → B never saw A
+//
+// Fix: when accepting, also INSERT a reciprocal row so both sides
+// have an 'accepted' friendship row pointing at each other.
+// The realtime subscription on friend_id picks this up for User A
+// (the original sender) and reloads their sidebar automatically.
+// ================================================================
 async function respondToRequest(requesterId, status) {
-    await _supabase.from('friends').update({ status }).eq('user_id', requesterId).eq('friend_id', currentUserId);
+    if (status === 'accepted') {
+        // 1. Update the original pending row to 'accepted'
+        const { error: updateError } = await _supabase
+            .from('friends')
+            .update({ status: 'accepted' })
+            .eq('user_id', requesterId)
+            .eq('friend_id', currentUserId);
+
+        if (updateError) {
+            console.error('Error accepting request:', updateError);
+            showToast('Could not accept request');
+            return;
+        }
+
+        // 2. Insert the reciprocal row so the current user also has the friendship
+        //    Use upsert to avoid duplicate key errors if somehow re-accepted.
+        const { error: insertError } = await _supabase
+            .from('friends')
+            .upsert(
+                { user_id: currentUserId, friend_id: requesterId, status: 'accepted' },
+                { onConflict: 'user_id,friend_id' }
+            );
+
+        if (insertError) {
+            console.error('Error creating reciprocal friendship:', insertError);
+            // Non-fatal: the update succeeded; log but continue
+        }
+
+        // 3. Reload this user's friends list immediately
+        await loadFriends();
+        showToast('Friend added!');
+
+    } else {
+        // Rejected: just update status
+        await _supabase
+            .from('friends')
+            .update({ status: 'rejected' })
+            .eq('user_id', requesterId)
+            .eq('friend_id', currentUserId);
+    }
+
+    // Refresh pending list UI
     loadPendingRequests();
-    if (status === 'accepted') loadFriends();
 }
 
 // ================================================================
@@ -555,7 +684,7 @@ async function respondToRequest(requesterId, status) {
 async function openChat(friendId) {
     currentChatId = friendId;
     const friend = friends.find(f => f.id === friendId);
-    friend.unread = 0;
+    if (friend) friend.unread = 0;
     addFriendZone.style.display = 'none';
     chatZone.style.display = 'flex';
     pendingZone.style.display = 'none';
@@ -576,7 +705,6 @@ async function loadMessages(friendId) {
         .order('created_at', { ascending: true });
     if (error) { messageContainer.innerHTML = '<div style="text-align:center;color:var(--red);font-weight:600;">Error loading chat.</div>'; return; }
 
-    // Mark received messages as seen
     const unseen = (messages || []).filter(m => m.sender_id === friendId && !m.seen_at);
     if (unseen.length > 0) {
         await _supabase.from('messages').update({ seen_at: new Date().toISOString() })
@@ -608,7 +736,6 @@ function appendMessageToDOM(msg, prepend = false) {
     msgDiv.className = 'message';
     msgDiv.innerText = msg.content;
 
-    // Right-click / long-press for context menu (sent messages only)
     if (isSent) {
         msgDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); showCtxMenu(e, wrapper); });
         msgDiv.addEventListener('click', (e) => { showCtxMenu(e, wrapper); });
@@ -616,7 +743,6 @@ function appendMessageToDOM(msg, prepend = false) {
 
     wrapper.appendChild(msgDiv);
 
-    // Meta row: timestamp + seen tick
     const meta = document.createElement('div');
     meta.className = 'msg-meta';
     const ts = document.createElement('span');
@@ -645,61 +771,37 @@ function showCtxMenu(e, wrapper) {
     e.stopPropagation();
     closeCtxMenu();
 
-    const msgId    = wrapper.dataset.msgId;
-    const isSeen   = wrapper.dataset.seen === '1';
-    const content  = wrapper.dataset.content;
+    const msgId  = wrapper.dataset.msgId;
+    const isSeen = wrapper.dataset.seen === '1';
+    const content = wrapper.dataset.content;
 
-    // Build menu HTML
     ctxMenu.innerHTML = `
-        <!-- Copy -->
-        <div class="ctx-item" id="ctx-copy">
-            ${ICONS.copy} Copy
-        </div>
+        <div class="ctx-item" id="ctx-copy">${ICONS.copy} Copy</div>
         <div class="ctx-divider"></div>
-
-        <!-- Delete now -->
-        <div class="ctx-item danger" id="ctx-delete">
-            ${ICONS.trash} Delete
-        </div>
-
-        <!-- Delete after viewed -->
+        <div class="ctx-item danger" id="ctx-delete">${ICONS.trash} Delete</div>
         <div class="ctx-item danger ${isSeen ? 'disabled' : ''}" id="ctx-delete-viewed" title="${isSeen ? 'Already seen by recipient' : 'Delete when recipient views it'}">
             ${isSeen ? ICONS.eyeOff : ICONS.eye} Delete after viewed ${isSeen ? '<span style="font-size:0.75rem;color:#C9C4B4;margin-left:4px;">(already seen)</span>' : ''}
         </div>
-
-        <!-- Delete after time (submenu) -->
         <div class="ctx-submenu-wrap">
             <div class="ctx-item danger" id="ctx-delete-timer">
-                ${ICONS.clock} Delete after…
-                <span class="ctx-arrow">${ICONS.chevronRight}</span>
+                ${ICONS.clock} Delete after…<span class="ctx-arrow">${ICONS.chevronRight}</span>
             </div>
             <div class="ctx-submenu" id="ctx-submenu">
-                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 5)">
-                    ${ICONS.clock} 5 minutes
-                </div>
-                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 10)">
-                    ${ICONS.clock} 10 minutes
-                </div>
-                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 15)">
-                    ${ICONS.clock} 15 minutes
-                </div>
+                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 5)">${ICONS.clock} 5 minutes</div>
+                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 10)">${ICONS.clock} 10 minutes</div>
+                <div class="ctx-item danger" onclick="scheduleDelete('${msgId}', 15)">${ICONS.clock} 15 minutes</div>
             </div>
-        </div>
-    `;
+        </div>`;
 
-    // Wire up actions
     ctxMenu.querySelector('#ctx-copy').onclick = () => { navigator.clipboard.writeText(content); showToast('Copied!'); closeCtxMenu(); };
     ctxMenu.querySelector('#ctx-delete').onclick = () => { deleteMessage(msgId); closeCtxMenu(); };
     if (!isSeen) {
         ctxMenu.querySelector('#ctx-delete-viewed').onclick = () => { registerDeleteOnView(msgId); showToast('Will delete when seen'); closeCtxMenu(); };
     }
 
-    // Position menu near click/tap
     const x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 200);
     const y = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 200);
     ctxMenu.style.display = 'block';
-
-    // Keep inside viewport
     const mw = ctxMenu.offsetWidth || 200;
     const mh = ctxMenu.offsetHeight || 160;
     ctxMenu.style.left = (x + mw > window.innerWidth ? x - mw : x) + 'px';
@@ -715,50 +817,33 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMe
 // ================================================================
 async function deleteMessage(msgId) {
     if (!msgId) return;
-    // Visual fade-out
     const wrapper = document.querySelector(`[data-msg-id="${msgId}"]`);
     if (wrapper) { wrapper.querySelector('.message').classList.add('deleting'); }
-
-    // Cancel any pending timer
     if (deleteTimers[msgId]) { clearTimeout(deleteTimers[msgId]); delete deleteTimers[msgId]; }
-
     const { error } = await _supabase.from('messages').delete().eq('id', msgId).eq('sender_id', currentUserId);
     if (error) { console.error('Delete error', error); showToast('Could not delete'); if (wrapper) wrapper.querySelector('.message').classList.remove('deleting'); return; }
     if (wrapper) wrapper.remove();
     showToast('Message deleted');
 }
 
-// ================================================================
-// TIMED DELETE
-// ================================================================
 function scheduleDelete(msgId, minutes) {
     closeCtxMenu();
     if (!msgId) return;
     if (deleteTimers[msgId]) { clearTimeout(deleteTimers[msgId]); }
-    const ms = minutes * 60 * 1000;
-    deleteTimers[msgId] = setTimeout(() => deleteMessage(msgId), ms);
+    deleteTimers[msgId] = setTimeout(() => deleteMessage(msgId), minutes * 60 * 1000);
     showToast(`Will delete in ${minutes} min`);
 }
 
-// ================================================================
-// DELETE ON VIEW
-// Stores in localStorage; checked when realtime update says seen_at set
-// ================================================================
 function registerDeleteOnView(msgId) {
     if (!msgId) return;
-    const key = `dov_${msgId}`;
-    // Use a simple in-memory set (no localStorage to respect sandbox)
     deleteOnViewSet.add(msgId);
 }
-const deleteOnViewSet = new Set();
 
 // ================================================================
-// REALTIME SUBSCRIPTION
+// REALTIME SUBSCRIPTION (messages)
 // ================================================================
-function getChatChannelName(a, b) { const s = [a, b].sort(); return `chat-${s[0]}-${s[1]}`; }
-
 function subscribeToNewMessages(friendId) {
-    const channelName = getChatChannelName(currentUserId, friendId);
+    const channelName = `chat-${[currentUserId, friendId].sort().join('-')}`;
     messageSubscription = _supabase.channel(channelName)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
             const msg = payload.new;
@@ -769,7 +854,6 @@ function subscribeToNewMessages(friendId) {
             if (!relevant || msg.sender_id === currentUserId) return;
 
             if (currentChatId === friendId) {
-                // Mark seen immediately since we're in the chat
                 await _supabase.from('messages').update({ seen_at: new Date().toISOString() }).eq('id', msg.id);
                 msg.seen_at = new Date().toISOString();
                 appendMessageToDOM(msg);
@@ -781,7 +865,6 @@ function subscribeToNewMessages(friendId) {
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
             const msg = payload.new;
-            // If the other person has now seen our message, update the tick
             if (msg.sender_id === currentUserId && msg.seen_at) {
                 const wrapper = document.querySelector(`[data-msg-id="${msg.id}"]`);
                 if (wrapper) {
@@ -789,15 +872,10 @@ function subscribeToNewMessages(friendId) {
                     const tick = wrapper.querySelector('.seen-tick');
                     if (tick) { tick.innerHTML = ICONS.checkDouble; tick.title = 'Seen'; }
                 }
-                // Check delete-on-view
-                if (deleteOnViewSet.has(msg.id)) {
-                    deleteOnViewSet.delete(msg.id);
-                    deleteMessage(msg.id);
-                }
+                if (deleteOnViewSet.has(msg.id)) { deleteOnViewSet.delete(msg.id); deleteMessage(msg.id); }
             }
         })
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
-            // Remove from DOM if the other person deleted a message
             const wrapper = document.querySelector(`[data-msg-id="${payload.old.id}"]`);
             if (wrapper) wrapper.remove();
         })
@@ -812,7 +890,6 @@ async function sendMessage() {
     const text = messageInput.value.trim();
     if (!text) return;
 
-    // Optimistic — no id yet so we use a temp placeholder
     const tempId = 'temp_' + Date.now();
     const optimistic = { id: tempId, sender_id: currentUserId, receiver_id: currentChatId, content: text, created_at: new Date().toISOString(), seen_at: null };
     appendMessageToDOM(optimistic);
@@ -825,7 +902,6 @@ async function sendMessage() {
     const { data, error } = await _supabase.from('messages').insert({ sender_id: currentUserId, receiver_id: currentChatId, content: text }).select().single();
     if (error) { console.error(error); showToast('Failed to send'); return; }
 
-    // Swap temp id for real id so delete/seen tracking works
     const wrapper = document.querySelector(`[data-msg-id="${tempId}"]`);
     if (wrapper && data) { wrapper.dataset.msgId = data.id; }
 }
