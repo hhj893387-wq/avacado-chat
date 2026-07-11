@@ -7,6 +7,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- OneSignal Web SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            await OneSignal.init({
+                appId: "cb60c6c8-6042-4c55-83c5-73973319b011",
+                // Required because this site lives under a GitHub Pages
+                // project subdirectory (/avacado-chat/), not at the domain root.
+                serviceWorkerPath: "avacado-chat/OneSignalSDKWorker.js",
+                serviceWorkerParam: { scope: "/avacado-chat/" },
+            });
+        });
+    </script>
     <style>
         :root {
           --green: #58CC02;
@@ -366,6 +381,34 @@ async function checkAuthAndLoad() {
     await loadFriends();
     setupPresence();
     setupFriendsSubscription(); // ← NEW
+    setupOneSignal();           // ← NEW
+}
+
+// ================================================================
+// ONESIGNAL — identify this user so push notifications can be
+// targeted at them by External ID (their Supabase user id).
+// ================================================================
+function setupOneSignal() {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+        try {
+            // Link this browser subscription to the app's user id
+            await OneSignal.login(currentUserId);
+
+            // Optional: store the username as a tag for easier targeting/personalization
+            if (currentUserUsername) {
+                await OneSignal.User.addTag('username', currentUserUsername);
+            }
+
+            // Prompt for push permission (native browser prompt).
+            // Only asks if the user hasn't already answered.
+            if (OneSignal.Notifications.permission !== true) {
+                await OneSignal.Notifications.requestPermission();
+            }
+        } catch (err) {
+            console.error('OneSignal setup error:', err);
+        }
+    });
 }
 
 // ================================================================
