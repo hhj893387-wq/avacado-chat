@@ -93,8 +93,64 @@
         .send-request-btn { background-color: var(--green); color: white; border: none; padding: 12px 22px; border-radius: 13px; cursor: pointer; font-weight: 700; font-size: 14px; letter-spacing: -0.1px; transition: filter 0.2s ease, transform 0.08s ease; flex-shrink: 0; }
         .send-request-btn:hover { filter: brightness(1.04); }
         .send-request-btn:active { transform: translateY(1px) scale(0.99); }
-        #chatZone { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        #chatZone { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; position: relative; }
         .chat-messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-color: var(--bg); min-height: 0; }
+
+        /* ── MENTION AUTOCOMPLETE ── */
+        .mention-dropdown {
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            bottom: 78px;
+            max-width: 320px;
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+            z-index: 500;
+            box-shadow: 0 10px 28px rgba(60,60,60,0.10);
+            animation: mentionIn 0.12s ease;
+        }
+        @keyframes mentionIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .mention-dropdown-label {
+            padding: 8px 14px 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-light);
+        }
+        .mention-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            cursor: pointer;
+            transition: background 0.12s ease;
+        }
+        .mention-dropdown-item:hover,
+        .mention-dropdown-item.active { background-color: var(--card); }
+        .mention-dropdown-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: var(--green); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.78rem; flex-shrink: 0;
+        }
+        .mention-dropdown-name { font-weight: 700; font-size: 0.87rem; color: var(--text); }
+        .mention-dropdown-hint { margin-left: auto; font-size: 0.68rem; color: var(--text-light); font-weight: 600; }
+
+        /* Highlighted @mention pill inside a message bubble */
+        .mention-pill {
+            background-color: rgba(88, 204, 2, 0.20);
+            color: var(--green-dark);
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 6px;
+        }
+        .message-wrapper.sent .message .mention-pill {
+            background-color: rgba(255, 255, 255, 0.28);
+            color: #fff;
+        }
 
         /* ── MESSAGES ── */
         .message-wrapper { display: flex; flex-direction: column; max-width: 70%; position: relative; }
@@ -243,8 +299,9 @@
             <div class="chat-messages-container" id="messageContainer">
                 <div style="text-align:center;color:var(--text-light);font-weight:500;margin-top:20px;">No messages yet. Say hi!</div>
             </div>
+            <div id="mentionDropdown" class="mention-dropdown" style="display:none;"></div>
             <div class="chat-input-area">
-                <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" autocorrect="off" spellcheck="true" onkeypress="handleKeyPress(event)">
+                <input type="text" id="messageInput" placeholder="Type a message... use @ to mention" autocomplete="off" autocorrect="off" spellcheck="true">
                 <button class="chat-send-btn" onclick="sendMessage()">Send</button>
             </div>
         </div>
@@ -351,6 +408,12 @@ const navPending       = document.getElementById('navPending');
 const onlineFriendsList= document.getElementById('onlineFriendsList');
 const ctxMenu          = document.getElementById('ctxMenu');
 const toastEl          = document.getElementById('toast');
+const mentionDropdown  = document.getElementById('mentionDropdown');
+
+// Mention autocomplete state
+let mentionMatches = [];
+let mentionActiveIndex = 0;
+let mentionTriggerPos = -1;
 
 const HEADER_ICON_FRIENDS = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 const HEADER_ICON_PENDING = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>`;
@@ -726,6 +789,7 @@ async function respondToRequest(requesterId, status) {
 // ================================================================
 async function openChat(friendId) {
     currentChatId = friendId;
+    closeMentionDropdown();
     const friend = friends.find(f => f.id === friendId);
     if (friend) friend.unread = 0;
     addFriendZone.style.display = 'none';
@@ -777,7 +841,12 @@ function appendMessageToDOM(msg, prepend = false) {
 
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message';
-    msgDiv.innerText = msg.content;
+
+    // Highlight @mentions of either chat participant, Discord-style
+    const otherId = isSent ? msg.receiver_id : msg.sender_id;
+    const otherFriend = friends.find(f => f.id === otherId);
+    const mentionableNames = [currentUserUsername, otherFriend ? otherFriend.name : null];
+    msgDiv.innerHTML = highlightMentions(msg.content, mentionableNames);
 
     if (isSent) {
         msgDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); showCtxMenu(e, wrapper); });
@@ -926,6 +995,144 @@ function subscribeToNewMessages(friendId) {
 }
 
 // ================================================================
+// @MENTION AUTOCOMPLETE (Discord-style)
+//
+// Since this is a 1:1 DM app, the only mentionable person is
+// whoever you're currently chatting with. Typing "@" opens a
+// small dropdown (styled with the app's own green/cream look)
+// so you can tap-select them instead of typing their full name.
+// ================================================================
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.innerText = str;
+    return div.innerHTML;
+}
+
+function escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getMentionableUsers() {
+    // In this DM-only app, the only mentionable person is the friend
+    // you currently have open. (Naturally extends to group chats later.)
+    const friend = friends.find(f => f.id === currentChatId);
+    return friend ? [friend] : [];
+}
+
+function updateMentionDropdown() {
+    const cursorPos = messageInput.selectionStart;
+    const textBeforeCursor = messageInput.value.slice(0, cursorPos);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (atIndex === -1) { closeMentionDropdown(); return; }
+
+    // Only trigger if "@" is at the start or preceded by whitespace
+    // (avoids triggering mid-word or on things like emails)
+    const charBefore = atIndex === 0 ? ' ' : textBeforeCursor[atIndex - 1];
+    if (!/\s/.test(charBefore)) { closeMentionDropdown(); return; }
+
+    const query = textBeforeCursor.slice(atIndex + 1);
+    if (/\s/.test(query)) { closeMentionDropdown(); return; } // stop after a space
+
+    const candidates = getMentionableUsers().filter(f =>
+        f.name.toLowerCase().startsWith(query.toLowerCase())
+    );
+
+    if (candidates.length === 0) { closeMentionDropdown(); return; }
+
+    mentionTriggerPos = atIndex;
+    mentionMatches = candidates;
+    mentionActiveIndex = 0;
+    renderMentionDropdown();
+}
+
+function renderMentionDropdown() {
+    mentionDropdown.innerHTML = `<div class="mention-dropdown-label">Mention</div>`;
+    mentionMatches.forEach((f, i) => {
+        const item = document.createElement('div');
+        item.className = 'mention-dropdown-item' + (i === mentionActiveIndex ? ' active' : '');
+        item.innerHTML = `
+            <div class="mention-dropdown-avatar">${f.name.charAt(0).toUpperCase()}</div>
+            <div class="mention-dropdown-name">${f.name}</div>
+            <div class="mention-dropdown-hint">↵ select</div>`;
+        item.onclick = () => selectMention(f);
+        mentionDropdown.appendChild(item);
+    });
+    mentionDropdown.style.display = 'block';
+}
+
+function closeMentionDropdown() {
+    mentionDropdown.style.display = 'none';
+    mentionDropdown.innerHTML = '';
+    mentionMatches = [];
+    mentionActiveIndex = 0;
+    mentionTriggerPos = -1;
+}
+
+function selectMention(friend) {
+    const cursorPos = messageInput.selectionStart;
+    const before = messageInput.value.slice(0, mentionTriggerPos);
+    const after = messageInput.value.slice(cursorPos);
+    const insertion = `@${friend.name} `;
+    messageInput.value = before + insertion + after;
+    const newCursor = (before + insertion).length;
+    messageInput.focus();
+    messageInput.setSelectionRange(newCursor, newCursor);
+    closeMentionDropdown();
+}
+
+// Wraps any "@name" occurrences (matching the two chat participants)
+// in a highlighted pill span, Discord-style. Content is HTML-escaped
+// first so this stays safe against injected markup.
+function highlightMentions(rawContent, mentionableNames) {
+    let escaped = escapeHtml(rawContent);
+    mentionableNames.forEach(name => {
+        if (!name) return;
+        const safeName = escapeHtml(name);
+        const regex = new RegExp(`@${escapeRegExp(safeName)}\\b`, 'gi');
+        escaped = escaped.replace(regex, `<span class="mention-pill">@${safeName}</span>`);
+    });
+    return escaped;
+}
+
+messageInput.addEventListener('input', updateMentionDropdown);
+
+messageInput.addEventListener('keydown', (e) => {
+    if (mentionDropdown.style.display === 'block' && mentionMatches.length > 0) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            mentionActiveIndex = (mentionActiveIndex + 1) % mentionMatches.length;
+            renderMentionDropdown();
+            return;
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            mentionActiveIndex = (mentionActiveIndex - 1 + mentionMatches.length) % mentionMatches.length;
+            renderMentionDropdown();
+            return;
+        }
+        if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault();
+            selectMention(mentionMatches[mentionActiveIndex]);
+            return;
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeMentionDropdown();
+            return;
+        }
+    }
+    if (e.key === 'Enter') { sendMessage(); }
+});
+
+document.addEventListener('click', (e) => {
+    if (!mentionDropdown.contains(e.target) && e.target !== messageInput) {
+        closeMentionDropdown();
+    }
+});
+
+// ================================================================
 // SEND MESSAGE
 // ================================================================
 async function sendMessage() {
@@ -938,6 +1145,7 @@ async function sendMessage() {
     appendMessageToDOM(optimistic);
     messageContainer.scrollTop = messageContainer.scrollHeight;
     messageInput.value = '';
+    closeMentionDropdown();
 
     const friend = friends.find(f => f.id === currentChatId);
     if (friend) { friend.lastMsg = text; friend.lastSender = currentUserId; renderFriendsList(); }
@@ -948,8 +1156,6 @@ async function sendMessage() {
     const wrapper = document.querySelector(`[data-msg-id="${tempId}"]`);
     if (wrapper && data) { wrapper.dataset.msgId = data.id; }
 }
-
-function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
 
 document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
 </script>
