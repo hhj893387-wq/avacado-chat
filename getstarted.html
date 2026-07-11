@@ -68,8 +68,80 @@
         .badge { background-color: var(--red); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
         .user-profile { padding: 15px; border-top: 2px solid var(--border); display: flex; align-items: center; background-color: var(--bg); flex-shrink: 0; }
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--green); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; }
+        .user-info-block { flex: 1; min-width: 0; }
         .user-status { display: flex; align-items: center; font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--green); margin-right: 5px; }
+
+        /* ── SETTINGS (gear) BUTTON — sits beside the profile row ── */
+        .settings-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 13px;
+            background-color: var(--card);
+            border: 2px solid var(--border);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-left: 8px;
+            transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, transform 0.08s ease;
+        }
+        .settings-btn:hover { border-color: var(--teal); color: var(--teal); background-color: #fff; }
+        .settings-btn:active { transform: scale(0.94); }
+        .settings-btn.open { border-color: var(--teal); color: var(--teal); background-color: #fff; }
+
+        /* ── NOTIFICATION SETTINGS PANEL ── */
+        .settings-overlay {
+            position: fixed; inset: 0; background-color: rgba(60,60,60,0.32);
+            display: none; align-items: center; justify-content: center; z-index: 20000;
+            animation: overlayIn 0.15s ease;
+        }
+        @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+        .settings-panel {
+            width: 360px;
+            max-width: calc(100vw - 40px);
+            background-color: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+            animation: menuIn 0.15s ease;
+        }
+        .settings-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 20px; border-bottom: 2px solid var(--border);
+        }
+        .settings-panel-title { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; color: var(--text); letter-spacing: -0.2px; }
+        .settings-panel-title svg { color: var(--green); flex-shrink: 0; }
+        .settings-close-btn {
+            width: 32px; height: 32px; border-radius: 9px; border: none; background: transparent;
+            color: var(--text-light); display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .settings-close-btn:hover { background: var(--card); color: var(--text); }
+        .settings-panel-body { padding: 4px 20px 14px; }
+        .settings-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; transition: opacity 0.2s ease; }
+        .settings-row.muted { opacity: 0.45; }
+        .settings-row.muted .toggle-switch { pointer-events: none; }
+        .settings-row-text { flex: 1; min-width: 0; }
+        .settings-row-title { font-weight: 700; font-size: 0.92rem; color: var(--text); margin-bottom: 2px; }
+        .settings-row-desc { font-size: 0.78rem; font-weight: 500; color: var(--text-light); line-height: 1.4; }
+        .settings-divider { height: 1px; background: var(--border); }
+
+        /* Custom toggle switch — no native checkbox look, matches the palette */
+        .toggle-switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; cursor: pointer; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-slider {
+            position: absolute; inset: 0; background-color: var(--border); border-radius: 20px;
+            transition: background-color 0.2s ease;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+            background-color: #fff; border-radius: 50%; transition: transform 0.2s ease;
+        }
+        .toggle-switch input:checked + .toggle-slider { background-color: var(--green); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
         .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: var(--bg); border-right: 2px solid var(--border); height: 100%; min-height: 0; overflow: hidden; }
         .chat-header { padding: 15px 20px; background-color: var(--bg); border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0; }
@@ -399,10 +471,11 @@
         </div>
         <div class="user-profile">
             <div class="user-avatar" id="currentUserAvatar">U</div>
-            <div>
+            <div class="user-info-block">
                 <div style="font-weight:700;color:var(--text);" id="currentUserName">User</div>
                 <div class="user-status"><span class="status-dot"></span> online</div>
             </div>
+            <button type="button" class="settings-btn" id="settingsBtn" title="Notification settings"></button>
         </div>
     </div>
 
@@ -486,6 +559,50 @@
 <div id="ctxMenu" class="ctx-menu" style="display:none;"></div>
 <div id="toast" class="toast"></div>
 
+<!-- Notification settings panel -->
+<div id="settingsOverlay" class="settings-overlay">
+    <div class="settings-panel">
+        <div class="settings-panel-header">
+            <div class="settings-panel-title" id="settingsPanelTitle"></div>
+            <button type="button" class="settings-close-btn" id="settingsCloseBtn"></button>
+        </div>
+        <div class="settings-panel-body">
+            <div class="settings-row" id="allNotifsRow">
+                <div class="settings-row-text">
+                    <div class="settings-row-title">Disable notifications</div>
+                    <div class="settings-row-desc">Turn off every push notification from Avocado Chat</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggleAllNotifs">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="settings-divider"></div>
+            <div class="settings-row" id="friendReqSettingsRow">
+                <div class="settings-row-text">
+                    <div class="settings-row-title">Disable friend request notifications</div>
+                    <div class="settings-row-desc">Stop alerts when someone sends you a friend request</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggleFriendReqNotifs">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="settings-divider"></div>
+            <div class="settings-row" id="mentionSettingsRow">
+                <div class="settings-row-text">
+                    <div class="settings-row-title">Disable mentions notifications</div>
+                    <div class="settings-row-desc">Stop alerts when someone @mentions you in a chat</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggleMentionNotifs">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 const ICONS = {
     copy: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -537,6 +654,17 @@ const ICONS = {
     send: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="22" y1="2" x2="11" y2="13"/>
         <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    </svg>`,
+    settings: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>`,
+    bell: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>`,
+    close: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>`,
 };
 
@@ -599,6 +727,18 @@ const mentionDropdown  = document.getElementById('mentionDropdown');
 const emojiBtn         = document.getElementById('emojiBtn');
 const emojiPicker      = document.getElementById('emojiPicker');
 
+// Settings / notification-preferences DOM refs
+const settingsBtn          = document.getElementById('settingsBtn');
+const settingsOverlay      = document.getElementById('settingsOverlay');
+const settingsPanelTitle   = document.getElementById('settingsPanelTitle');
+const settingsCloseBtn     = document.getElementById('settingsCloseBtn');
+const allNotifsRow         = document.getElementById('allNotifsRow');
+const friendReqSettingsRow = document.getElementById('friendReqSettingsRow');
+const mentionSettingsRow   = document.getElementById('mentionSettingsRow');
+const toggleAllNotifs      = document.getElementById('toggleAllNotifs');
+const toggleFriendReqNotifs= document.getElementById('toggleFriendReqNotifs');
+const toggleMentionNotifs  = document.getElementById('toggleMentionNotifs');
+
 const EMOJI_LIST = [
     '😀','😁','😂','🤣','😊','😍','😘','😜','🤔','😎',
     '😭','😡','🥹','👍','👎','🙏','👏','🎉','🔥','❤️',
@@ -659,6 +799,7 @@ async function checkAuthAndLoad() {
     setupOneSignal();
     initVoiceRecording();
     initEmojiPicker();
+    initNotificationSettings();
 }
 
 function setupOneSignal() {
@@ -1171,7 +1312,13 @@ function showCtxMenu(e, wrapper) {
 
 function closeCtxMenu() { ctxMenu.style.display = 'none'; ctxMenu.innerHTML = ''; }
 document.addEventListener('click', closeCtxMenu);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCtxMenu(); closeEmojiPicker(); } });
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeCtxMenu();
+        closeEmojiPicker();
+        closeSettingsPanel();
+    }
+});
 
 async function deleteMessage(msgId) {
     if (!msgId) return;
@@ -1791,6 +1938,102 @@ function insertEmoji(emoji) {
     messageInput.setSelectionRange(newCursor, newCursor);
     autoResizeInput();
     updateMicSendVisibility();
+}
+
+// ================================================================
+// NOTIFICATION SETTINGS — gear icon beside the profile row opens a
+// panel with three toggles: disable all notifications, disable
+// friend-request notifications, disable mention notifications.
+// Preferences persist per-user in localStorage and are mirrored onto
+// OneSignal (opt-out of push entirely for "all", or a mute tag for the
+// two granular categories that a sending function could check).
+// ================================================================
+function notifPrefsKey() {
+    return `avocado_notif_prefs_${currentUserId || 'anon'}`;
+}
+
+function loadNotificationPrefs() {
+    const defaults = { disableAll: false, disableFriendReq: false, disableMentions: false };
+    try {
+        const raw = localStorage.getItem(notifPrefsKey());
+        if (raw) return { ...defaults, ...JSON.parse(raw) };
+    } catch (err) {
+        console.error('Could not read notification prefs:', err);
+    }
+    return defaults;
+}
+
+function saveNotificationPrefs(prefs) {
+    try {
+        localStorage.setItem(notifPrefsKey(), JSON.stringify(prefs));
+    } catch (err) {
+        console.error('Could not save notification prefs:', err);
+    }
+}
+
+function applyPrefsToUI(prefs) {
+    toggleAllNotifs.checked = prefs.disableAll;
+    toggleFriendReqNotifs.checked = prefs.disableFriendReq;
+    toggleMentionNotifs.checked = prefs.disableMentions;
+    friendReqSettingsRow.classList.toggle('muted', prefs.disableAll);
+    mentionSettingsRow.classList.toggle('muted', prefs.disableAll);
+}
+
+function syncPrefsToOneSignal(prefs) {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+        try {
+            if (prefs.disableAll) {
+                await OneSignal.User.PushSubscription.optOut();
+            } else {
+                await OneSignal.User.PushSubscription.optIn();
+            }
+            await OneSignal.User.addTag('mute_friend_requests', prefs.disableFriendReq ? 'true' : 'false');
+            await OneSignal.User.addTag('mute_mentions', prefs.disableMentions ? 'true' : 'false');
+        } catch (err) {
+            console.error('OneSignal notification-preference sync error:', err);
+        }
+    });
+}
+
+function initNotificationSettings() {
+    settingsBtn.innerHTML = ICONS.settings;
+    settingsPanelTitle.innerHTML = `${ICONS.bell} Notification Settings`;
+    settingsCloseBtn.innerHTML = ICONS.close;
+
+    const prefs = loadNotificationPrefs();
+    applyPrefsToUI(prefs);
+    syncPrefsToOneSignal(prefs); // silent sync on load, no toast
+
+    settingsBtn.addEventListener('click', openSettingsPanel);
+    settingsCloseBtn.addEventListener('click', closeSettingsPanel);
+    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) closeSettingsPanel(); });
+
+    [toggleAllNotifs, toggleFriendReqNotifs, toggleMentionNotifs].forEach(input => {
+        input.addEventListener('change', onNotificationToggleChange);
+    });
+}
+
+function onNotificationToggleChange() {
+    const prefs = {
+        disableAll: toggleAllNotifs.checked,
+        disableFriendReq: toggleFriendReqNotifs.checked,
+        disableMentions: toggleMentionNotifs.checked,
+    };
+    saveNotificationPrefs(prefs);
+    applyPrefsToUI(prefs);
+    syncPrefsToOneSignal(prefs);
+    showToast(prefs.disableAll ? 'Notifications disabled' : 'Notification settings updated');
+}
+
+function openSettingsPanel() {
+    settingsOverlay.style.display = 'flex';
+    settingsBtn.classList.add('open');
+}
+
+function closeSettingsPanel() {
+    settingsOverlay.style.display = 'none';
+    settingsBtn.classList.remove('open');
 }
 
 document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
