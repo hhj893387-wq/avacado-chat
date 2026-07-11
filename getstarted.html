@@ -15,8 +15,6 @@
         OneSignalDeferred.push(async function (OneSignal) {
             await OneSignal.init({
                 appId: "cb60c6c8-6042-4c55-83c5-73973319b011",
-                // Required because this site lives under a GitHub Pages
-                // project subdirectory (/avacado-chat/), not at the domain root.
                 serviceWorkerPath: "avacado-chat/OneSignalSDKWorker.js",
                 serviceWorkerParam: { scope: "/avacado-chat/" },
             });
@@ -38,14 +36,12 @@
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background-color: var(--border); }
         .app-container { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-color: var(--bg); display: flex; overflow: hidden; }
 
-        /* ── CUSTOM SCROLLBAR ── */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #cfc6ac; }
         * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 
-        /* ── LEFT SIDEBAR ── */
         .sidebar-left { width: 280px; background-color: var(--bg); border-right: 2px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; }
         .nav-item { padding: 15px 20px; cursor: pointer; color: var(--text); font-weight: 600; font-size: 14.5px; display: flex; align-items: center; gap: 12px; transition: background 0.2s ease, color 0.2s ease; flex-shrink: 0; }
         .nav-item svg { flex-shrink: 0; opacity: 0.75; transition: opacity 0.2s ease; }
@@ -75,7 +71,6 @@
         .user-status { display: flex; align-items: center; font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--green); margin-right: 5px; }
 
-        /* ── MIDDLE PANEL ── */
         .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: var(--bg); border-right: 2px solid var(--border); height: 100%; min-height: 0; overflow: hidden; }
         .chat-header { padding: 15px 20px; background-color: var(--bg); border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0; }
         .chat-header svg { opacity: 0.8; }
@@ -94,138 +89,125 @@
         .send-request-btn:hover { filter: brightness(1.04); }
         .send-request-btn:active { transform: translateY(1px) scale(0.99); }
         #chatZone { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; position: relative; }
-        .chat-messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-color: var(--bg); min-height: 0; }
+        .chat-messages-container { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 8px; background-color: var(--bg); min-height: 0; }
 
-        /* ── MENTION AUTOCOMPLETE ── */
         .mention-dropdown {
-            position: absolute;
-            left: 20px;
-            right: 20px;
-            bottom: 78px;
-            max-width: 320px;
-            background: #fff;
-            border: 2px solid var(--border);
-            border-radius: 13px;
-            overflow: hidden;
-            z-index: 500;
-            box-shadow: 0 10px 28px rgba(60,60,60,0.10);
-            animation: mentionIn 0.12s ease;
+            position: absolute; left: 20px; right: 20px; bottom: 78px; max-width: 320px;
+            background: #fff; border: 2px solid var(--border); border-radius: 13px; overflow: hidden;
+            z-index: 500; box-shadow: 0 10px 28px rgba(60,60,60,0.10); animation: mentionIn 0.12s ease;
         }
         @keyframes mentionIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .mention-dropdown-label {
-            padding: 8px 14px 4px;
-            font-size: 0.68rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-light);
-        }
-        .mention-dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 14px;
-            cursor: pointer;
-            transition: background 0.12s ease;
-        }
-        .mention-dropdown-item:hover,
-        .mention-dropdown-item.active { background-color: var(--card); }
-        .mention-dropdown-avatar {
-            width: 30px; height: 30px; border-radius: 50%;
-            background-color: var(--green); color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 0.78rem; flex-shrink: 0;
-        }
+        .mention-dropdown-label { padding: 8px 14px 4px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); }
+        .mention-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; transition: background 0.12s ease; }
+        .mention-dropdown-item:hover, .mention-dropdown-item.active { background-color: var(--card); }
+        .mention-dropdown-avatar { width: 30px; height: 30px; border-radius: 50%; background-color: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; flex-shrink: 0; }
         .mention-dropdown-name { font-weight: 700; font-size: 0.87rem; color: var(--text); }
         .mention-dropdown-hint { margin-left: auto; font-size: 0.68rem; color: var(--text-light); font-weight: 600; }
 
-        /* Highlighted @mention pill inside a message bubble */
-        .mention-pill {
-            background-color: rgba(88, 204, 2, 0.20);
-            color: var(--green-dark);
-            font-weight: 700;
-            padding: 1px 6px;
-            border-radius: 6px;
-        }
-        .message-wrapper.sent .message .mention-pill {
-            background-color: rgba(255, 255, 255, 0.28);
-            color: #fff;
-        }
+        .mention-pill { background-color: rgba(88, 204, 2, 0.20); color: var(--green-dark); font-weight: 700; padding: 1px 6px; border-radius: 6px; }
+        .message-wrapper.sent .message .mention-pill { background-color: rgba(255, 255, 255, 0.28); color: #fff; }
 
-        /* ── MESSAGES ── */
-        .message-wrapper { display: flex; flex-direction: column; max-width: 70%; position: relative; }
+        /* ── MESSAGES ──
+           overflow-wrap: anywhere + word-break: break-word are the fix for
+           long unbroken runs of characters (e.g. "aaaaaaaaaaaaaaaaaaaaaa")
+           that have no natural space to wrap at — without these, such a
+           run refuses to wrap and pushes the bubble past its max-width and
+           off the edge of the screen. white-space: pre-wrap preserves
+           intentional line breaks typed with Shift+Enter. */
+        .message-wrapper { display: flex; flex-direction: column; max-width: 70%; min-width: 0; position: relative; }
         .message-wrapper.sent { align-self: flex-end; align-items: flex-end; }
         .message-wrapper.received { align-self: flex-start; align-items: flex-start; }
-        .message { padding: 10px 15px; border-radius: 13px; font-size: 0.95rem; font-weight: 500; word-wrap: break-word; width: fit-content; cursor: pointer; user-select: none; position: relative; }
+        .message {
+            padding: 10px 15px;
+            border-radius: 13px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            max-width: 100%;
+            width: fit-content;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
         .message-wrapper.sent .message { background-color: var(--green); color: white; border-bottom-right-radius: 4px; }
         .message-wrapper.received .message { background-color: #ffffff; color: var(--text); border-bottom-left-radius: 4px; border: 2px solid var(--border); }
         .message.deleting { opacity: 0.4; pointer-events: none; }
 
-        /* Seen tick row */
         .msg-meta { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
         .timestamp { font-size: 0.65rem; font-weight: 500; color: var(--text-light); padding: 0 2px; }
         .seen-tick { display: flex; align-items: center; }
         .seen-tick svg { width: 14px; height: 14px; }
 
-        /* ── CONTEXT MENU ── */
-        .ctx-menu {
-            position: fixed;
-            background: #fff;
-            border: 2px solid var(--border);
-            border-radius: 13px;
-            box-shadow: none;
-            z-index: 9999;
-            min-width: 190px;
-            padding: 6px 0;
-            animation: menuIn 0.12s ease;
-        }
+        .ctx-menu { position: fixed; background: #fff; border: 2px solid var(--border); border-radius: 13px; box-shadow: none; z-index: 9999; min-width: 190px; padding: 6px 0; animation: menuIn 0.12s ease; }
         @keyframes menuIn { from { opacity:0; transform: scale(0.93); } to { opacity:1; transform: scale(1); } }
-        .ctx-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 16px;
-            font-size: 0.88rem;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text);
-            transition: background 0.15s ease;
-            white-space: nowrap;
-        }
+        .ctx-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text); transition: background 0.15s ease; white-space: nowrap; }
         .ctx-item:hover { background: var(--card); }
         .ctx-item.danger { color: var(--red); }
         .ctx-item.danger:hover { background: #FFEDED; }
         .ctx-item.disabled { color: #C9C4B4; cursor: not-allowed; pointer-events: none; }
         .ctx-item svg { flex-shrink: 0; }
         .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
-        /* Submenu */
         .ctx-submenu-wrap { position: relative; }
-        .ctx-submenu {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background: #fff;
-            border: 2px solid var(--border);
-            border-radius: 13px;
-            box-shadow: none;
-            min-width: 200px;
-            padding: 6px 0;
-            z-index: 10000;
-        }
+        .ctx-submenu { display: none; position: absolute; left: 100%; top: 0; background: #fff; border: 2px solid var(--border); border-radius: 13px; box-shadow: none; min-width: 200px; padding: 6px 0; z-index: 10000; }
         .ctx-submenu-wrap:hover .ctx-submenu { display: block; }
         .ctx-arrow { margin-left: auto; opacity: 0.4; }
 
         /* ── CHAT INPUT ── */
-        .chat-input-area { flex-shrink: 0; padding: 15px 20px; border-top: 2px solid var(--border); background-color: var(--bg); display: flex; gap: 10px; align-items: center; }
-        .chat-input-area input { flex: 1; padding: 12px 16px; border: 2px solid var(--border); border-radius: 13px; outline: none; background-color: var(--card); color: var(--text); font-size: 0.9rem; font-weight: 500; min-width: 0; height: 46px; transition: border-color 0.2s ease, background-color 0.2s ease; }
-        .chat-input-area input::placeholder { color: var(--text-light); }
-        .chat-input-area input:focus { border-color: var(--teal); background-color: #fff; }
+        .chat-input-area { flex-shrink: 0; padding: 15px 20px; border-top: 2px solid var(--border); background-color: var(--bg); display: flex; gap: 10px; align-items: flex-end; }
+
+        .message-input-wrap { position: relative; flex: 1; min-width: 0; }
+
+        .chat-input-area textarea#messageInput {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 13px;
+            outline: none;
+            background-color: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.45;
+            /* Same wrap fix as message bubbles — long unbroken text must
+               wrap inside the box instead of scrolling past its edge. */
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            min-width: 0;
+            height: 46px;
+            resize: none;
+            overflow-y: hidden;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+        .chat-input-area textarea#messageInput::placeholder { color: var(--text-light); }
+        .chat-input-area textarea#messageInput:focus { border-color: var(--teal); background-color: #fff; }
+
+        .expand-toggle {
+            display: none;
+            position: absolute;
+            top: -30px;
+            right: 4px;
+            background-color: #fff;
+            border: 2px solid var(--border);
+            color: var(--text-light);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            padding: 5px 12px;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: border-color 0.15s ease, color 0.15s ease;
+            z-index: 30;
+        }
+        .expand-toggle:hover { border-color: var(--teal); color: var(--teal); }
+
         .chat-send-btn { background-color: var(--green); color: white; border: none; padding: 0 26px; border-radius: 13px; cursor: pointer; font-weight: 700; font-size: 14px; letter-spacing: -0.1px; flex-shrink: 0; height: 46px; transition: filter 0.2s ease, transform 0.08s ease; }
         .chat-send-btn:hover { filter: brightness(1.04); }
         .chat-send-btn:active { transform: translateY(1px) scale(0.99); }
 
-        /* ── RIGHT SIDEBAR ── */
         .sidebar-right { width: 250px; background-color: var(--bg); padding: 20px; flex-shrink: 0; height: 100%; overflow-y: auto; }
         .sidebar-right-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); margin-bottom: 15px; }
         .no-friends-card { background-color: var(--card); border-radius: 13px; padding: 20px; text-align: center; color: var(--text); }
@@ -237,20 +219,17 @@
         #addFriendZone { flex-shrink: 0; }
         #pendingZone { flex: 1; min-height: 0; overflow-y: auto; }
 
-        /* Toast notification */
         .toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: var(--text); color: #fff; padding: 9px 20px; border-radius: 13px;
             font-size: 0.82rem; font-weight: 600; z-index: 99999; opacity: 0;
-            transition: opacity 0.2s ease;
-            pointer-events: none;
+            transition: opacity 0.2s ease; pointer-events: none;
         }
         .toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 <div class="app-container">
-    <!-- LEFT SIDEBAR -->
     <div class="sidebar-left">
         <div class="nav-item active" id="navFriends" onclick="switchMode('friends')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -272,7 +251,6 @@
         </div>
     </div>
 
-    <!-- MIDDLE PANEL -->
     <div class="chat-panel">
         <div class="chat-header" id="chatHeader">
             <span class="chat-header-name">
@@ -281,7 +259,6 @@
             </span>
         </div>
 
-        <!-- ADD FRIEND ZONE -->
         <div id="addFriendZone" style="display:block;">
             <div class="add-friend-area">
                 <div class="add-friend-title">Add a Friend</div>
@@ -294,26 +271,26 @@
             </div>
         </div>
 
-        <!-- CHAT ZONE -->
         <div id="chatZone" style="display:none;">
             <div class="chat-messages-container" id="messageContainer">
                 <div style="text-align:center;color:var(--text-light);font-weight:500;margin-top:20px;">No messages yet. Say hi!</div>
             </div>
             <div id="mentionDropdown" class="mention-dropdown" style="display:none;"></div>
             <div class="chat-input-area">
-                <input type="text" id="messageInput" placeholder="Type a message... use @ to mention" autocomplete="off" autocorrect="off" spellcheck="true">
+                <div class="message-input-wrap" id="messageInputWrap">
+                    <button type="button" class="expand-toggle" id="expandToggle">See more</button>
+                    <textarea id="messageInput" rows="1" placeholder="Type a message... use @ to mention" autocomplete="off" autocorrect="off" spellcheck="true"></textarea>
+                </div>
                 <button class="chat-send-btn" onclick="sendMessage()">Send</button>
             </div>
         </div>
 
-        <!-- PENDING ZONE -->
         <div id="pendingZone" style="display:none;flex-direction:column;padding:20px;align-items:center;justify-content:center;color:var(--text-light);">
             <h3 style="margin-bottom:10px;color:var(--text);font-weight:800;letter-spacing:-0.3px;">Friend Requests</h3>
             <div id="pendingList" style="width:100%;max-width:400px;"></div>
         </div>
     </div>
 
-    <!-- RIGHT SIDEBAR -->
     <div class="sidebar-right">
         <div class="sidebar-right-title">friends online</div>
         <div id="onlineFriendsList">
@@ -325,15 +302,10 @@
     </div>
 </div>
 
-<!-- Context Menu -->
 <div id="ctxMenu" class="ctx-menu" style="display:none;"></div>
-<!-- Toast -->
 <div id="toast" class="toast"></div>
 
 <script>
-// ================================================================
-// SVG ICON LIBRARY
-// ================================================================
 const ICONS = {
     copy: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -367,30 +339,23 @@ const ICONS = {
     </svg>`,
 };
 
-// ================================================================
-// SUPABASE
-// ================================================================
 const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbmliZ3FmYW16Ynh3Y2Vnamd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTYwNzYsImV4cCI6MjA5OTE3MjA3Nn0.kxxKXHkUceloqQVg6JjWPBVCP_R-TQ7QRn6LKj9nuQ4';
 if (typeof supabase === 'undefined') { document.body.innerHTML = '<h1 style="color:red">Supabase SDK not loaded.</h1>'; }
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ================================================================
-// STATE
-// ================================================================
 let currentUserId = null;
 let currentUserUsername = null;
 let friends = [];
 let currentChatId = null;
 let messageSubscription = null;
 let presenceChannel = null;
-let friendsSubscription = null;   // ← NEW: watches friends table for this user
+let friendsSubscription = null;
 let currentMode = 'friends';
 let onlineUserIds = new Set();
 const deleteOnViewSet = new Set();
 const deleteTimers = {};
 
-// DOM refs
 const friendsList      = document.getElementById('friendsList');
 const addFriendZone    = document.getElementById('addFriendZone');
 const chatZone         = document.getElementById('chatZone');
@@ -400,6 +365,8 @@ const messageContainer = document.getElementById('messageContainer');
 const chatHeader       = document.getElementById('chatHeader');
 const friendInput      = document.getElementById('friendInput');
 const messageInput     = document.getElementById('messageInput');
+const messageInputWrap = document.getElementById('messageInputWrap');
+const expandToggle     = document.getElementById('expandToggle');
 const currentUserName  = document.getElementById('currentUserName');
 const currentUserAvatar= document.getElementById('currentUserAvatar');
 const friendError      = document.getElementById('friendError');
@@ -410,27 +377,25 @@ const ctxMenu          = document.getElementById('ctxMenu');
 const toastEl          = document.getElementById('toast');
 const mentionDropdown  = document.getElementById('mentionDropdown');
 
-// Mention autocomplete state
 let mentionMatches = [];
 let mentionActiveIndex = 0;
 let mentionTriggerPos = -1;
+
+const INPUT_MIN_HEIGHT = 46;
+const INPUT_COLLAPSED_MAX = 170;
+const INPUT_EXPANDED_MAX = 340;
+let inputExpanded = false;
 
 const HEADER_ICON_FRIENDS = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 const HEADER_ICON_PENDING = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>`;
 const HEADER_ICON_PERSON  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 
-// ================================================================
-// TOAST
-// ================================================================
 function showToast(msg) {
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     setTimeout(() => toastEl.classList.remove('show'), 2000);
 }
 
-// ================================================================
-// AUTH
-// ================================================================
 async function checkAuthAndLoad() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) { window.location.href = 'index.html'; return; }
@@ -443,28 +408,18 @@ async function checkAuthAndLoad() {
     }
     await loadFriends();
     setupPresence();
-    setupFriendsSubscription(); // ← NEW
-    setupOneSignal();           // ← NEW
+    setupFriendsSubscription();
+    setupOneSignal();
 }
 
-// ================================================================
-// ONESIGNAL — identify this user so push notifications can be
-// targeted at them by External ID (their Supabase user id).
-// ================================================================
 function setupOneSignal() {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function (OneSignal) {
         try {
-            // Link this browser subscription to the app's user id
             await OneSignal.login(currentUserId);
-
-            // Optional: store the username as a tag for easier targeting/personalization
             if (currentUserUsername) {
                 await OneSignal.User.addTag('username', currentUserUsername);
             }
-
-            // Prompt for push permission (native browser prompt).
-            // Only asks if the user hasn't already answered.
             if (OneSignal.Notifications.permission !== true) {
                 await OneSignal.Notifications.requestPermission();
             }
@@ -474,9 +429,6 @@ function setupOneSignal() {
     });
 }
 
-// ================================================================
-// PRESENCE
-// ================================================================
 function setupPresence() {
     presenceChannel = _supabase.channel('online-users', { config: { presence: { key: currentUserId } } });
     presenceChannel
@@ -498,12 +450,6 @@ function setupPresence() {
 }
 function isOnline(userId) { return onlineUserIds.has(userId); }
 
-// ================================================================
-// FRIENDS REALTIME SUBSCRIPTION
-// Watches the friends table for rows where friend_id = currentUserId
-// so that when someone's request is accepted (INSERT of reciprocal row)
-// this user's sidebar updates immediately without a page refresh.
-// ================================================================
 function setupFriendsSubscription() {
     if (friendsSubscription) { _supabase.removeChannel(friendsSubscription); }
 
@@ -511,16 +457,9 @@ function setupFriendsSubscription() {
         .channel(`friends-for-${currentUserId}`)
         .on(
             'postgres_changes',
-            {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'friends',
-                // Only care about rows where I am the friend_id (i.e. someone added me)
-                filter: `friend_id=eq.${currentUserId}`
-            },
+            { event: 'INSERT', schema: 'public', table: 'friends', filter: `friend_id=eq.${currentUserId}` },
             async (payload) => {
                 const row = payload.new;
-                // If a new accepted friendship row appeared for us, reload the friends list
                 if (row.status === 'accepted') {
                     await loadFriends();
                     showToast('A new friend appeared!');
@@ -529,18 +468,10 @@ function setupFriendsSubscription() {
         )
         .on(
             'postgres_changes',
-            {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'friends',
-                // Also watch rows where I am user_id — so if the original request row
-                // gets its status updated to accepted, my list reloads too.
-                filter: `user_id=eq.${currentUserId}`
-            },
+            { event: 'UPDATE', schema: 'public', table: 'friends', filter: `user_id=eq.${currentUserId}` },
             async (payload) => {
                 const row = payload.new;
                 if (row.status === 'accepted') {
-                    // The person we sent a request to accepted it — reload friends
                     const alreadyInList = friends.some(f => f.id === row.friend_id);
                     if (!alreadyInList) {
                         await loadFriends();
@@ -552,9 +483,6 @@ function setupFriendsSubscription() {
         .subscribe();
 }
 
-// ================================================================
-// NAVIGATION
-// ================================================================
 function switchMode(mode) {
     currentMode = mode;
     navFriends.className = mode === 'friends' ? 'nav-item active' : 'nav-item';
@@ -574,9 +502,6 @@ function switchMode(mode) {
     }
 }
 
-// ================================================================
-// FRIENDS LIST
-// ================================================================
 async function loadFriends() {
     const { data: fr, error: fError } = await _supabase
         .from('friends')
@@ -592,7 +517,6 @@ async function loadFriends() {
     const ids = fr.map(r => r.friend_id);
     const { data: profiles } = await _supabase.from('profiles').select('id, username').in('id', ids);
 
-    // Preserve unread counts for friends already in list
     const unreadMap = {};
     friends.forEach(f => { unreadMap[f.id] = f.unread || 0; });
 
@@ -638,8 +562,10 @@ function renderFriendsList() {
         const info = document.createElement('div'); info.className = 'friend-info';
         const nm = document.createElement('div'); nm.className = 'friend-name'; nm.innerText = friend.name;
         const pv = document.createElement('div'); pv.className = 'friend-last-msg';
-        if (friend.lastMsg) { pv.innerText = (friend.lastSender === currentUserId ? 'You: ' : `${friend.name}: `) + friend.lastMsg; }
-        else { pv.innerText = 'Start chatting...'; }
+        if (friend.lastMsg) {
+            const preview = friend.lastMsg.replace(/\s*\n\s*/g, ' ');
+            pv.innerText = (friend.lastSender === currentUserId ? 'You: ' : `${friend.name}: `) + preview;
+        } else { pv.innerText = 'Start chatting...'; }
         info.appendChild(nm); info.appendChild(pv);
         card.appendChild(avatarWrap); card.appendChild(info);
         if (friend.unread > 0) {
@@ -680,9 +606,6 @@ function updateChatHeader() {
     </div>`;
 }
 
-// ================================================================
-// ADD FRIEND
-// ================================================================
 async function addNewFriend() {
     const username = friendInput.value.trim();
     friendError.style.display = 'none';
@@ -698,9 +621,6 @@ async function addNewFriend() {
     showToast("Friend request sent!");
 }
 
-// ================================================================
-// PENDING REQUESTS
-// ================================================================
 async function loadPendingRequests() {
     pendingList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-weight:500;">Loading...</div>';
     const { data: requests } = await _supabase.from('friends').select('user_id').eq('friend_id', currentUserId).eq('status', 'pending');
@@ -725,22 +645,8 @@ async function loadPendingRequests() {
     });
 }
 
-// ================================================================
-// RESPOND TO FRIEND REQUEST — THE CORE FIX
-//
-// Old code only updated the original row's status to 'accepted'.
-// That meant:
-//   • The sender (user_id) had a row: user_id=A, friend_id=B, status='accepted'  ✓
-//   • The receiver (friend_id=B) had NO row with user_id=B → B never saw A
-//
-// Fix: when accepting, also INSERT a reciprocal row so both sides
-// have an 'accepted' friendship row pointing at each other.
-// The realtime subscription on friend_id picks this up for User A
-// (the original sender) and reloads their sidebar automatically.
-// ================================================================
 async function respondToRequest(requesterId, status) {
     if (status === 'accepted') {
-        // 1. Update the original pending row to 'accepted'
         const { error: updateError } = await _supabase
             .from('friends')
             .update({ status: 'accepted' })
@@ -753,8 +659,6 @@ async function respondToRequest(requesterId, status) {
             return;
         }
 
-        // 2. Insert the reciprocal row so the current user also has the friendship
-        //    Use upsert to avoid duplicate key errors if somehow re-accepted.
         const { error: insertError } = await _supabase
             .from('friends')
             .upsert(
@@ -764,15 +668,12 @@ async function respondToRequest(requesterId, status) {
 
         if (insertError) {
             console.error('Error creating reciprocal friendship:', insertError);
-            // Non-fatal: the update succeeded; log but continue
         }
 
-        // 3. Reload this user's friends list immediately
         await loadFriends();
         showToast('Friend added!');
 
     } else {
-        // Rejected: just update status
         await _supabase
             .from('friends')
             .update({ status: 'rejected' })
@@ -780,13 +681,9 @@ async function respondToRequest(requesterId, status) {
             .eq('friend_id', currentUserId);
     }
 
-    // Refresh pending list UI
     loadPendingRequests();
 }
 
-// ================================================================
-// CHAT OPEN
-// ================================================================
 async function openChat(friendId) {
     currentChatId = friendId;
     closeMentionDropdown();
@@ -802,9 +699,6 @@ async function openChat(friendId) {
     subscribeToNewMessages(friendId);
 }
 
-// ================================================================
-// LOAD & RENDER MESSAGES
-// ================================================================
 async function loadMessages(friendId) {
     messageContainer.innerHTML = '<div style="text-align:center;color:var(--text-light);font-weight:500;margin-top:20px;">Loading messages...</div>';
     const { data: messages, error } = await _supabase.from('messages').select('*')
@@ -842,7 +736,6 @@ function appendMessageToDOM(msg, prepend = false) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message';
 
-    // Highlight @mentions of either chat participant, Discord-style
     const otherId = isSent ? msg.receiver_id : msg.sender_id;
     const otherFriend = friends.find(f => f.id === otherId);
     const mentionableNames = [currentUserUsername, otherFriend ? otherFriend.name : null];
@@ -876,9 +769,6 @@ function appendMessageToDOM(msg, prepend = false) {
     else { messageContainer.appendChild(wrapper); }
 }
 
-// ================================================================
-// CONTEXT MENU
-// ================================================================
 function showCtxMenu(e, wrapper) {
     e.stopPropagation();
     closeCtxMenu();
@@ -924,9 +814,6 @@ function closeCtxMenu() { ctxMenu.style.display = 'none'; ctxMenu.innerHTML = ''
 document.addEventListener('click', closeCtxMenu);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMenu(); });
 
-// ================================================================
-// DELETE MESSAGE
-// ================================================================
 async function deleteMessage(msgId) {
     if (!msgId) return;
     const wrapper = document.querySelector(`[data-msg-id="${msgId}"]`);
@@ -951,9 +838,6 @@ function registerDeleteOnView(msgId) {
     deleteOnViewSet.add(msgId);
 }
 
-// ================================================================
-// REALTIME SUBSCRIPTION (messages)
-// ================================================================
 function subscribeToNewMessages(friendId) {
     const channelName = `chat-${[currentUserId, friendId].sort().join('-')}`;
     messageSubscription = _supabase.channel(channelName)
@@ -994,15 +878,6 @@ function subscribeToNewMessages(friendId) {
         .subscribe();
 }
 
-// ================================================================
-// @MENTION AUTOCOMPLETE (Discord-style)
-//
-// Since this is a 1:1 DM app, the only mentionable person is
-// whoever you're currently chatting with. Typing "@" opens a
-// small dropdown (styled with the app's own green/cream look)
-// so you can tap-select them instead of typing their full name.
-// ================================================================
-
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.innerText = str;
@@ -1014,8 +889,6 @@ function escapeRegExp(str) {
 }
 
 function getMentionableUsers() {
-    // In this DM-only app, the only mentionable person is the friend
-    // you currently have open. (Naturally extends to group chats later.)
     const friend = friends.find(f => f.id === currentChatId);
     return friend ? [friend] : [];
 }
@@ -1027,13 +900,11 @@ function updateMentionDropdown() {
 
     if (atIndex === -1) { closeMentionDropdown(); return; }
 
-    // Only trigger if "@" is at the start or preceded by whitespace
-    // (avoids triggering mid-word or on things like emails)
     const charBefore = atIndex === 0 ? ' ' : textBeforeCursor[atIndex - 1];
     if (!/\s/.test(charBefore)) { closeMentionDropdown(); return; }
 
     const query = textBeforeCursor.slice(atIndex + 1);
-    if (/\s/.test(query)) { closeMentionDropdown(); return; } // stop after a space
+    if (/\s/.test(query)) { closeMentionDropdown(); return; }
 
     const candidates = getMentionableUsers().filter(f =>
         f.name.toLowerCase().startsWith(query.toLowerCase())
@@ -1080,11 +951,9 @@ function selectMention(friend) {
     messageInput.focus();
     messageInput.setSelectionRange(newCursor, newCursor);
     closeMentionDropdown();
+    autoResizeInput();
 }
 
-// Wraps any "@name" occurrences (matching the two chat participants)
-// in a highlighted pill span, Discord-style. Content is HTML-escaped
-// first so this stays safe against injected markup.
 function highlightMentions(rawContent, mentionableNames) {
     let escaped = escapeHtml(rawContent);
     mentionableNames.forEach(name => {
@@ -1096,7 +965,46 @@ function highlightMentions(rawContent, mentionableNames) {
     return escaped;
 }
 
-messageInput.addEventListener('input', updateMentionDropdown);
+// ================================================================
+// MULTI-LINE INPUT — auto-resize + expand/collapse
+// ================================================================
+function autoResizeInput() {
+    messageInput.style.height = 'auto';
+    const scrollHeight = messageInput.scrollHeight;
+    const cap = inputExpanded ? INPUT_EXPANDED_MAX : INPUT_COLLAPSED_MAX;
+    const newHeight = Math.max(INPUT_MIN_HEIGHT, Math.min(scrollHeight, cap));
+    messageInput.style.height = newHeight + 'px';
+    messageInput.style.overflowY = scrollHeight > cap ? 'auto' : 'hidden';
+
+    if (inputExpanded) {
+        expandToggle.style.display = 'block';
+        expandToggle.textContent = 'See less';
+    } else if (scrollHeight > INPUT_COLLAPSED_MAX) {
+        expandToggle.style.display = 'block';
+        expandToggle.textContent = 'See more';
+    } else {
+        expandToggle.style.display = 'none';
+    }
+}
+
+function resetInputHeight() {
+    inputExpanded = false;
+    messageInput.style.height = INPUT_MIN_HEIGHT + 'px';
+    messageInput.style.overflowY = 'hidden';
+    expandToggle.style.display = 'none';
+    expandToggle.textContent = 'See more';
+}
+
+expandToggle.addEventListener('click', () => {
+    inputExpanded = !inputExpanded;
+    autoResizeInput();
+    messageInput.focus();
+});
+
+messageInput.addEventListener('input', () => {
+    autoResizeInput();
+    updateMentionDropdown();
+});
 
 messageInput.addEventListener('keydown', (e) => {
     if (mentionDropdown.style.display === 'block' && mentionMatches.length > 0) {
@@ -1123,7 +1031,12 @@ messageInput.addEventListener('keydown', (e) => {
             return;
         }
     }
-    if (e.key === 'Enter') { sendMessage(); }
+
+    // Enter sends; Shift+Enter inserts a new line (default textarea behavior).
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
 });
 
 document.addEventListener('click', (e) => {
@@ -1132,9 +1045,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ================================================================
-// SEND MESSAGE
-// ================================================================
 async function sendMessage() {
     if (!currentChatId) return;
     const text = messageInput.value.trim();
@@ -1145,6 +1055,7 @@ async function sendMessage() {
     appendMessageToDOM(optimistic);
     messageContainer.scrollTop = messageContainer.scrollHeight;
     messageInput.value = '';
+    resetInputHeight();
     closeMentionDropdown();
 
     const friend = friends.find(f => f.id === currentChatId);
