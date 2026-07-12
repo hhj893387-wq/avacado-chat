@@ -32,9 +32,28 @@
           --card: #F0ECE1;
           --red: #FF4B4B;
         }
+
+        /* ── THEME VARIANTS ──
+           Theme picks the base palette; contrast mode independently boosts
+           borders and secondary-text legibility on top of whichever theme
+           is active. Both are applied as classes on <body>. */
+        body.theme-dark {
+          --bg: #1F2418; --card: #262B1E; --border: #3A4030;
+          --text: #EDEEE7; --text-light: #A7AC9C;
+          --green: #6FDB1B; --green-dark: #58CC02; --teal: #3FBBA9; --red: #FF6161;
+        }
+        body.theme-extra-dark {
+          --bg: #0B0E07; --card: #141810; --border: #242A1B;
+          --text: #F5F6EF; --text-light: #8A8F7C;
+          --green: #7BE521; --green-dark: #58CC02; --teal: #46CDB8; --red: #FF6B6B;
+        }
+        body.contrast-high { --border: #8A8368; --text-light: #5C5848; }
+        body.theme-dark.contrast-high { --border: #6B7359; --text-light: #C7CBBA; }
+        body.theme-extra-dark.contrast-high { --border: #4A5240; --text-light: #D3D6C8; }
+
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background-color: var(--border); }
-        .app-container { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-color: var(--bg); display: flex; overflow: hidden; }
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background-color: var(--border); transition: background-color 0.2s ease; }
+        .app-container { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-color: var(--bg); display: flex; overflow: hidden; transition: background-color 0.2s ease; }
 
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -42,7 +61,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #cfc6ac; }
         * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 
-        .sidebar-left { width: 280px; background-color: var(--bg); border-right: 2px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; }
+        .sidebar-left { width: 280px; background-color: var(--bg); border-right: 2px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; transition: background-color 0.2s ease, border-color 0.2s ease; }
         .nav-item { padding: 15px 20px; cursor: pointer; color: var(--text); font-weight: 600; font-size: 14.5px; display: flex; align-items: center; gap: 12px; transition: background 0.2s ease, color 0.2s ease; flex-shrink: 0; }
         .nav-item svg { flex-shrink: 0; opacity: 0.75; transition: opacity 0.2s ease; }
         .nav-item:hover { background-color: var(--card); }
@@ -59,19 +78,21 @@
         .btn-accept { background-color: var(--green); color: #fff; }
         .btn-reject { background-color: #fff; color: var(--red); border: 2px solid var(--border); }
         .avatar-wrap { position: relative; margin-right: 12px; flex-shrink: 0; }
-        .friend-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--card); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text); }
+        .friend-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--card); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text); overflow: hidden; cursor: pointer; flex-shrink: 0; }
+        .friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .online-dot { position: absolute; bottom: 0px; right: 0px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--bg); background-color: #C9C4B4; transition: background-color 0.2s ease; }
         .online-dot.online { background-color: var(--green); }
         .friend-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
         .friend-name { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; color: var(--text); }
         .friend-last-msg { font-size: 0.78rem; color: var(--text-light); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; line-height: 1.2; }
         .badge { background-color: var(--red); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
-        .user-profile { padding: 15px; border-top: 2px solid var(--border); display: flex; align-items: center; background-color: var(--bg); flex-shrink: 0; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--green); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; overflow: hidden; cursor: pointer; flex-shrink: 0; }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--green); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; }
         .user-info-block { flex: 1; min-width: 0; }
         .user-status { display: flex; align-items: center; font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--green); margin-right: 5px; }
-
+        .user-profile { padding: 15px; border-top: 2px solid var(--border); display: flex; align-items: center; background-color: var(--bg); flex-shrink: 0; }
         /* ── SETTINGS (gear) BUTTON — sits beside the profile row ── */
         .settings-btn {
             width: 40px;
@@ -92,25 +113,29 @@
         .settings-btn:active { transform: scale(0.94); }
         .settings-btn.open { border-color: var(--teal); color: var(--teal); background-color: #fff; }
 
-        /* ── NOTIFICATION SETTINGS PANEL ── */
+        /* ── SETTINGS PANEL (Discord-style: nav list + content area, own palette) ── */
         .settings-overlay {
-            position: fixed; inset: 0; background-color: rgba(60,60,60,0.32);
-            display: none; align-items: center; justify-content: center; z-index: 20000;
+            position: fixed; inset: 0; background-color: rgba(30,30,26,0.4);
+            display: none; z-index: 20000;
             animation: overlayIn 0.15s ease;
         }
         @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
         .settings-panel {
-            width: 360px;
-            max-width: calc(100vw - 40px);
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+            border: none;
             background-color: var(--bg);
-            border: 2px solid var(--border);
-            border-radius: 13px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
             animation: menuIn 0.15s ease;
         }
         .settings-panel-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 18px 20px; border-bottom: 2px solid var(--border);
+            padding: 16px 20px; border-bottom: 2px solid var(--border); flex-shrink: 0;
         }
         .settings-panel-title { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; color: var(--text); letter-spacing: -0.2px; }
         .settings-panel-title svg { color: var(--green); flex-shrink: 0; }
@@ -120,14 +145,43 @@
             transition: background 0.15s ease, color 0.15s ease;
         }
         .settings-close-btn:hover { background: var(--card); color: var(--text); }
-        .settings-panel-body { padding: 4px 20px 14px; }
+
+        .settings-panel-main { display: flex; flex: 1; min-height: 0; }
+
+        .settings-nav {
+            width: 168px;
+            flex-shrink: 0;
+            border-right: 2px solid var(--border);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow-y: auto;
+        }
+        .settings-nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 9px; border: none; background: none;
+            cursor: pointer; font-weight: 700; font-size: 0.85rem; color: var(--text-light);
+            text-align: left; width: 100%; transition: background 0.15s ease, color 0.15s ease;
+        }
+        .settings-nav-item svg { flex-shrink: 0; opacity: 0.85; }
+        .settings-nav-item:hover { background: var(--card); color: var(--text); }
+        .settings-nav-item.active { background: var(--green); color: #fff; }
+        .settings-nav-item.active svg { opacity: 1; }
+
+        .settings-content { flex: 1; min-width: 0; overflow-y: auto; padding: 18px 22px; }
+        .settings-section { display: none; }
+        .settings-section.active { display: block; }
+        .settings-section-title { font-weight: 800; font-size: 0.95rem; color: var(--text); letter-spacing: -0.2px; margin-bottom: 4px; }
+        .settings-section-subtitle { font-size: 0.78rem; font-weight: 500; color: var(--text-light); margin-bottom: 14px; }
+
         .settings-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; transition: opacity 0.2s ease; }
         .settings-row.muted { opacity: 0.45; }
         .settings-row.muted .toggle-switch { pointer-events: none; }
         .settings-row-text { flex: 1; min-width: 0; }
         .settings-row-title { font-weight: 700; font-size: 0.92rem; color: var(--text); margin-bottom: 2px; }
         .settings-row-desc { font-size: 0.78rem; font-weight: 500; color: var(--text-light); line-height: 1.4; }
-        .settings-divider { height: 1px; background: var(--border); }
+        .settings-divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
 
         /* Custom toggle switch — no native checkbox look, matches the palette */
         .toggle-switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; cursor: pointer; }
@@ -143,7 +197,71 @@
         .toggle-switch input:checked + .toggle-slider { background-color: var(--green); }
         .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
-        .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: var(--bg); border-right: 2px solid var(--border); height: 100%; min-height: 0; overflow: hidden; }
+        /* Theme swatch cards (radio-backed, custom styled) */
+        .theme-options { display: flex; gap: 10px; margin-bottom: 18px; }
+        .theme-option {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            padding: 12px 8px; border: 2px solid var(--border); border-radius: 13px; cursor: pointer;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+        .theme-option input { display: none; }
+        .theme-option:hover { border-color: var(--teal); }
+        .theme-option.selected { border-color: var(--green); background-color: rgba(88,204,2,0.10); }
+        .theme-swatch { width: 100%; height: 40px; border-radius: 9px; border: 2px solid var(--border); }
+        .theme-swatch.light { background: linear-gradient(135deg, #FBFAF6 50%, #F0ECE1 50%); }
+        .theme-swatch.dark { background: linear-gradient(135deg, #2b3122 50%, #1c2016 50%); }
+        .theme-swatch.extra-dark { background: linear-gradient(135deg, #14170f 50%, #060704 50%); }
+        .theme-option-label { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+
+        /* Custom radio buttons (used for contrast mode) */
+        .radio-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; cursor: pointer; transition: background 0.15s ease; }
+        .radio-option:hover { background: var(--card); }
+        .radio-option input { display: none; }
+        .radio-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); position: relative; flex-shrink: 0; transition: border-color 0.2s ease; }
+        .radio-dot::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--green); transform: scale(0); transition: transform 0.15s ease; }
+        .radio-option input:checked + .radio-dot { border-color: var(--green); }
+        .radio-option input:checked + .radio-dot::after { transform: scale(1); }
+        .radio-option-text { flex: 1; min-width: 0; }
+        .radio-option-title { font-weight: 700; font-size: 0.88rem; color: var(--text); }
+        .radio-option-desc { font-size: 0.76rem; font-weight: 500; color: var(--text-light); margin-top: 1px; }
+
+
+/* ── PROFILE EDITOR ── */
+.profile-banner-wrap { position: relative; height: 140px; border-radius: 13px; background: var(--card); border: 2px solid var(--border); margin-bottom: 46px; cursor: pointer; }
+.profile-banner-inner { position: absolute; inset: 0; border-radius: 11px; overflow: hidden; }
+.profile-banner-inner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.profile-banner-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 0.8rem; font-weight: 700; }
+.profile-avatar-editor { position: absolute; left: 20px; bottom: -36px; width: 84px; height: 84px; border-radius: 50%; border: 4px solid var(--bg); background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.6rem; cursor: pointer; overflow: hidden; z-index: 2; }
+.profile-editor-hint { position: absolute; inset: 0; background: rgba(0,0,0,0.35); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; opacity: 0; transition: opacity 0.15s ease; }
+.profile-banner-wrap:hover .profile-editor-hint, .profile-avatar-editor:hover .profile-editor-hint { opacity: 1; }
+.profile-bio-input { width: 100%; min-height: 80px; padding: 12px 14px; border: 2px solid var(--border); border-radius: 13px; background: var(--card); color: var(--text); font-family: inherit; font-size: 0.85rem; font-weight: 500; resize: vertical; outline: none; }
+.profile-bio-input:focus { border-color: var(--teal); }
+
+/* Crop modal */
+.crop-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 30000; display: none; align-items: center; justify-content: center; }
+.crop-modal { background: var(--bg); border: 2px solid var(--border); border-radius: 13px; padding: 20px; width: 380px; max-width: calc(100vw - 40px); }
+.crop-canvas-wrap { width: 300px; height: 300px; margin: 0 auto 16px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border); position: relative; touch-action: none; }
+.crop-canvas-wrap canvas { position: absolute; top: 0; left: 0; cursor: grab; }
+.crop-slider { width: 100%; margin-bottom: 16px; }
+.crop-actions { display: flex; gap: 10px; }
+.crop-actions button { flex: 1; padding: 10px; border-radius: 9px; border: none; font-weight: 700; cursor: pointer; }
+.crop-cancel { background: var(--card); color: var(--text); border: 2px solid var(--border) !important; }
+.crop-confirm { background: var(--green); color: #fff; }
+
+/* Profile viewer modal */
+.profile-view-overlay { position: fixed; inset: 0; background: rgba(30,30,26,0.4); z-index: 25000; display: none; align-items: center; justify-content: center; }
+.profile-view-card { width: 340px; max-width: calc(100vw - 40px); background: var(--bg); border: 2px solid var(--border); border-radius: 13px; overflow: hidden; }
+.profile-view-banner { height: 100px; background: var(--card); position: relative; }
+.profile-view-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.profile-view-avatar { width: 76px; height: 76px; border-radius: 50%; border: 4px solid var(--bg); background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; margin: -38px 0 0 20px; overflow: hidden; position: relative; }
+.profile-view-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-view-body { padding: 46px 20px 20px; }
+.profile-view-name { font-weight: 800; font-size: 1.1rem; color: var(--text); }
+.profile-view-bio { margin-top: 10px; font-size: 0.85rem; color: var(--text-light); font-weight: 500; line-height: 1.5; white-space: pre-wrap; }
+.profile-view-close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.3); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+
+
+        .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: var(--bg); border-right: 2px solid var(--border); height: 100%; min-height: 0; overflow: hidden; transition: background-color 0.2s ease, border-color 0.2s ease; }
         .chat-header { padding: 15px 20px; background-color: var(--bg); border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0; }
         .chat-header svg { opacity: 0.8; }
         .chat-header-name { font-size: 1.05rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
@@ -154,7 +272,7 @@
         .add-friend-title { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 5px; color: var(--text); }
         .add-friend-subtitle { font-size: 0.85rem; color: var(--text-light); font-weight: 500; margin-bottom: 15px; }
         .add-friend-input-container { display: flex; align-items: center; border: 2px solid var(--border); border-radius: 13px; padding: 5px 5px 5px 18px; background-color: var(--card); transition: border-color 0.2s ease, background-color 0.2s ease; }
-        .add-friend-input-container:focus-within { border-color: var(--teal); background-color: #fff; }
+        .add-friend-input-container:focus-within { border-color: var(--teal); background-color: var(--card); }
         .add-friend-input { flex: 1; border: none; background: transparent; outline: none; font-size: 0.9rem; font-weight: 500; color: var(--text); }
         .add-friend-input::placeholder { color: var(--text-light); }
         .send-request-btn { background-color: var(--green); color: white; border: none; padding: 12px 22px; border-radius: 13px; cursor: pointer; font-weight: 700; font-size: 14px; letter-spacing: -0.1px; transition: filter 0.2s ease, transform 0.08s ease; flex-shrink: 0; }
@@ -165,27 +283,22 @@
 
         .mention-dropdown {
             position: absolute; left: 20px; right: 20px; bottom: 78px; max-width: 320px;
-            background: #fff; border: 2px solid var(--border); border-radius: 13px; overflow: hidden;
+            background: var(--card);
             z-index: 500; box-shadow: 0 10px 28px rgba(60,60,60,0.10); animation: mentionIn 0.12s ease;
         }
         @keyframes mentionIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         .mention-dropdown-label { padding: 8px 14px 4px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); }
         .mention-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; transition: background 0.12s ease; }
         .mention-dropdown-item:hover, .mention-dropdown-item.active { background-color: var(--card); }
-        .mention-dropdown-avatar { width: 30px; height: 30px; border-radius: 50%; background-color: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; flex-shrink: 0; }
+        .mention-dropdown-avatar { width: 30px; height: 30px; border-radius: 50%; background-color: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; flex-shrink: 0; overflow: hidden; }
+        .mention-dropdown-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .mention-dropdown-name { font-weight: 700; font-size: 0.87rem; color: var(--text); }
         .mention-dropdown-hint { margin-left: auto; font-size: 0.68rem; color: var(--text-light); font-weight: 600; }
 
         .mention-pill { background-color: rgba(88, 204, 2, 0.20); color: var(--green-dark); font-weight: 700; padding: 1px 6px; border-radius: 6px; }
         .message-wrapper.sent .message .mention-pill { background-color: rgba(255, 255, 255, 0.28); color: #fff; }
 
-        /* ── MESSAGES ──
-           overflow-wrap: anywhere + word-break: break-word are the fix for
-           long unbroken runs of characters (e.g. "aaaaaaaaaaaaaaaaaaaaaa")
-           that have no natural space to wrap at — without these, such a
-           run refuses to wrap and pushes the bubble past its max-width and
-           off the edge of the screen. white-space: pre-wrap preserves
-           intentional line breaks typed with Shift+Enter. */
+        /* ── MESSAGES ── */
         .message-wrapper { display: flex; flex-direction: column; max-width: 70%; min-width: 0; position: relative; }
         .message-wrapper.sent { align-self: flex-end; align-items: flex-end; }
         .message-wrapper.received { align-self: flex-start; align-items: flex-start; }
@@ -204,7 +317,7 @@
             position: relative;
         }
         .message-wrapper.sent .message { background-color: var(--green); color: white; border-bottom-right-radius: 4px; }
-        .message-wrapper.received .message { background-color: #ffffff; color: var(--text); border-bottom-left-radius: 4px; border: 2px solid var(--border); }
+        .message-wrapper.received .message { background-color: var(--card); color: var(--text); border-bottom-left-radius: 4px; border: 2px solid var(--border); }
         .message.deleting { opacity: 0.4; pointer-events: none; }
 
         .msg-meta { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
@@ -212,7 +325,7 @@
         .seen-tick { display: flex; align-items: center; }
         .seen-tick svg { width: 14px; height: 14px; }
 
-        .ctx-menu { position: fixed; background: #fff; border: 2px solid var(--border); border-radius: 13px; box-shadow: none; z-index: 9999; min-width: 190px; padding: 6px 0; animation: menuIn 0.12s ease; }
+        .ctx-menu { position: fixed; background: var(--card); border: 2px solid var(--border); border-radius: 13px; box-shadow: none; z-index: 9999; min-width: 190px; padding: 6px 0; animation: menuIn 0.12s ease; }
         @keyframes menuIn { from { opacity:0; transform: scale(0.93); } to { opacity:1; transform: scale(1); } }
         .ctx-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text); transition: background 0.15s ease; white-space: nowrap; }
         .ctx-item:hover { background: var(--card); }
@@ -222,10 +335,14 @@
         .ctx-item svg { flex-shrink: 0; }
         .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
         .ctx-submenu-wrap { position: relative; }
-        .ctx-submenu { display: none; position: absolute; left: 100%; top: 0; background: #fff; border: 2px solid var(--border); border-radius: 13px; box-shadow: none; min-width: 200px; padding: 6px 0; z-index: 10000; }
+        .ctx-submenu { display: none; position: absolute; left: 100%; top: 0; background: var(--card); border: 2px solid var(--border); border-radius: 13px; box-shadow: none; min-width: 200px; padding: 6px 0; z-index: 10000; }
         .ctx-submenu-wrap:hover .ctx-submenu { display: block; }
         .ctx-arrow { margin-left: auto; opacity: 0.4; }
-
+        /* Chat header avatar + click-to-view-profile */
+        .chat-header-avatar { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: var(--text); }
+        .chat-header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-header-name.clickable { cursor: pointer; }
+        .chat-header-name.clickable:hover { text-decoration: underline; }
         /* ── CHAT INPUT ── */
         .chat-input-area { flex-shrink: 0; padding: 15px 20px; border-top: 2px solid var(--border); background-color: var(--bg); display: flex; gap: 10px; align-items: flex-end; }
 
@@ -244,8 +361,6 @@
             font-weight: 500;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.45;
-            /* Same wrap fix as message bubbles — long unbroken text must
-               wrap inside the box instead of scrolling past its edge. */
             overflow-wrap: anywhere;
             word-break: break-word;
             min-width: 0;
@@ -255,14 +370,14 @@
             transition: border-color 0.2s ease, background-color 0.2s ease;
         }
         .chat-input-area textarea#messageInput::placeholder { color: var(--text-light); }
-        .chat-input-area textarea#messageInput:focus { border-color: var(--teal); background-color: #fff; }
+        .chat-input-area textarea#messageInput:focus { border-color: var(--teal); background-color: var(--card); }
 
         .expand-toggle {
             display: none;
             position: absolute;
             top: -30px;
             right: 4px;
-            background-color: #fff;
+            background-color: var(--card);
             border: 2px solid var(--border);
             color: var(--text-light);
             font-size: 0.68rem;
@@ -310,7 +425,7 @@
             width: 300px;
             max-height: 260px;
             overflow-y: auto;
-            background: #fff;
+            background: var(--card);
             border: 2px solid var(--border);
             border-radius: 13px;
             box-shadow: 0 10px 28px rgba(60,60,60,0.10);
@@ -387,7 +502,7 @@
         }
         .icon-round-btn:hover { filter: brightness(1.06); }
         .icon-round-btn:active { transform: scale(0.94); }
-        .icon-round-btn.danger { background-color: #fff; color: var(--red); border: 2px solid var(--border); }
+        .icon-round-btn.danger { background-color: var(--card); color: var(--red); border: 2px solid var(--border); }
         .icon-round-btn.danger:hover { border-color: var(--red); }
         .icon-round-btn.confirm { background-color: var(--green); color: #fff; }
         .icon-round-btn.play { background-color: var(--green); color: #fff; }
@@ -435,7 +550,7 @@
         .message-wrapper.received .voice-msg-bar.played { background-color: var(--green); }
         .voice-msg-duration { font-size: 0.72rem; font-weight: 700; flex-shrink: 0; opacity: 0.9; }
 
-        .sidebar-right { width: 250px; background-color: var(--bg); padding: 20px; flex-shrink: 0; height: 100%; overflow-y: auto; }
+        .sidebar-right { width: 250px; background-color: var(--bg); padding: 20px; flex-shrink: 0; height: 100%; overflow-y: auto; transition: background-color 0.2s ease; }
         .sidebar-right-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); margin-bottom: 15px; }
         .no-friends-card { background-color: var(--card); border-radius: 13px; padding: 20px; text-align: center; color: var(--text); }
         .no-friends-card h4 { margin-bottom: 5px; font-weight: 700; }
@@ -448,14 +563,42 @@
 
         .toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--text); color: #fff; padding: 9px 20px; border-radius: 13px;
+            background: var(--text); color: var(--bg); padding: 9px 20px; border-radius: 13px;
             font-size: 0.82rem; font-weight: 600; z-index: 99999; opacity: 0;
             transition: opacity 0.2s ease; pointer-events: none;
         }
         .toast.show { opacity: 1; }
+
     </style>
 </head>
 <body>
+
+<div class="crop-overlay" id="cropOverlay">
+    <div class="crop-modal">
+        <div class="crop-canvas-wrap" id="cropCanvasWrap">
+            <canvas id="cropCanvas" width="300" height="300"></canvas>
+        </div>
+        <input type="range" class="crop-slider" id="cropZoomSlider" min="1" max="3" step="0.01" value="1">
+        <div class="crop-actions">
+            <button class="crop-cancel" id="cropCancelBtn">Cancel</button>
+            <button class="crop-confirm" id="cropConfirmBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="profile-view-overlay" id="profileViewOverlay">
+    <div class="profile-view-card">
+        <div class="profile-view-banner" id="profileViewBanner">
+            <button type="button" class="profile-view-close" id="profileViewCloseBtn"></button>
+        </div>
+        <div class="profile-view-avatar" id="profileViewAvatar"></div>
+        <div class="profile-view-body">
+            <div class="profile-view-name" id="profileViewName"></div>
+            <div class="profile-view-bio" id="profileViewBio"></div>
+        </div>
+    </div>
+</div>
+
 <div class="app-container">
     <div class="sidebar-left">
         <div class="nav-item active" id="navFriends" onclick="switchMode('friends')">
@@ -475,7 +618,7 @@
                 <div style="font-weight:700;color:var(--text);" id="currentUserName">User</div>
                 <div class="user-status"><span class="status-dot"></span> online</div>
             </div>
-            <button type="button" class="settings-btn" id="settingsBtn" title="Notification settings"></button>
+            <button type="button" class="settings-btn" id="settingsBtn" title="Settings"></button>
         </div>
     </div>
 
@@ -559,45 +702,129 @@
 <div id="ctxMenu" class="ctx-menu" style="display:none;"></div>
 <div id="toast" class="toast"></div>
 
-<!-- Notification settings panel -->
+<!-- Settings panel: left nav of categories + right content area, so more
+     sections can be dropped in later without restructuring anything. -->
 <div id="settingsOverlay" class="settings-overlay">
     <div class="settings-panel">
         <div class="settings-panel-header">
             <div class="settings-panel-title" id="settingsPanelTitle"></div>
             <button type="button" class="settings-close-btn" id="settingsCloseBtn"></button>
         </div>
-        <div class="settings-panel-body">
-            <div class="settings-row" id="allNotifsRow">
-                <div class="settings-row-text">
-                    <div class="settings-row-title">Disable notifications</div>
-                    <div class="settings-row-desc">Turn off every push notification from Avocado Chat</div>
-                </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggleAllNotifs">
-                    <span class="toggle-slider"></span>
-                </label>
+        <div class="settings-panel-main">
+            <div class="settings-nav" id="settingsNav">
+                <button type="button" class="settings-nav-item" id="navSettingsProfile" data-section="profile"></button>
+                <button type="button" class="settings-nav-item active" id="navSettingsNotifications" data-section="notifications"></button>
+                <button type="button" class="settings-nav-item" id="navSettingsTheme" data-section="theme"></button>
             </div>
-            <div class="settings-divider"></div>
-            <div class="settings-row" id="friendReqSettingsRow">
-                <div class="settings-row-text">
-                    <div class="settings-row-title">Disable friend request notifications</div>
-                    <div class="settings-row-desc">Stop alerts when someone sends you a friend request</div>
+            <div class="settings-content">
+                <!-- Notifications section -->
+                <div class="settings-section active" id="section-notifications">
+                    <div class="settings-section-title">Notifications</div>
+                    <div class="settings-section-subtitle">Control what Avocado Chat can notify you about.</div>
+
+                    <div class="settings-row" id="allNotifsRow">
+                        <div class="settings-row-text">
+                            <div class="settings-row-title">Disable notifications</div>
+                            <div class="settings-row-desc">Turn off every push notification from Avocado Chat</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleAllNotifs">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-divider"></div>
+                    <div class="settings-row" id="friendReqSettingsRow">
+                        <div class="settings-row-text">
+                            <div class="settings-row-title">Disable friend request notifications</div>
+                            <div class="settings-row-desc">Stop alerts when someone sends you a friend request</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleFriendReqNotifs">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-divider"></div>
+                    <div class="settings-row" id="mentionSettingsRow">
+                        <div class="settings-row-text">
+                            <div class="settings-row-title">Disable mentions notifications</div>
+                            <div class="settings-row-desc">Stop alerts when someone @mentions you in a chat</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleMentionNotifs">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggleFriendReqNotifs">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-            <div class="settings-divider"></div>
-            <div class="settings-row" id="mentionSettingsRow">
-                <div class="settings-row-text">
-                    <div class="settings-row-title">Disable mentions notifications</div>
-                    <div class="settings-row-desc">Stop alerts when someone @mentions you in a chat</div>
+
+
+<div class="settings-section" id="section-profile">
+     <div class="settings-section-title">Your Profile</div>
+     <div class="settings-section-subtitle">This is how others see you. Static images or GIFs both work.</div>
+
+    <div class="profile-banner-wrap" id="profileBannerWrap">
+    <div class="profile-banner-inner" id="profileBannerInner">
+    <div class="profile-banner-placeholder" id="profileBannerPlaceholder">Click to add a banner</div>
+    <div class="profile-editor-hint">Change banner</div>
+    </div>
+    <div class="profile-avatar-editor" id="profileAvatarEditor">
+    <span id="profileAvatarEditorLetter"></span>
+    <div class="profile-editor-hint">Change avatar</div>
+    </div>
+</div>
+    <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+    <input type="file" id="bannerFileInput" accept="image/*" style="display:none;">
+
+    <div class="settings-row-title" style="margin-top:10px;">Bio</div>
+    <textarea class="profile-bio-input" id="profileBioInput" placeholder="Tell people about yourself..." maxlength="190"></textarea>
+</div>
+
+                
+                <!-- Theme section -->
+                <div class="settings-section" id="section-theme">
+                    <div class="settings-section-title">App theme</div>
+                    <div class="settings-section-subtitle">Choose how Avocado Chat looks on this device.</div>
+                    <div class="theme-options" id="themeOptions">
+                        <label class="theme-option" data-theme="light">
+                            <input type="radio" name="themeMode" value="light">
+                            <div class="theme-swatch light"></div>
+                            <div class="theme-option-label">Light</div>
+                        </label>
+                        <label class="theme-option" data-theme="dark">
+                            <input type="radio" name="themeMode" value="dark">
+                            <div class="theme-swatch dark"></div>
+                            <div class="theme-option-label">Dark</div>
+                        </label>
+                        <label class="theme-option" data-theme="extra-dark">
+                            <input type="radio" name="themeMode" value="extra-dark">
+                            <div class="theme-swatch extra-dark"></div>
+                            <div class="theme-option-label">Extra Dark</div>
+                        </label>
+                        <label class="theme-option" data-theme="system">
+                          <input type="radio" name="themeMode" value="system">
+                          <div class="theme-swatch" style="background: linear-gradient(135deg, #FBFAF6 50%, #14170f 50%);"></div>
+                          <div class="theme-option-label">System</div>
+                       </label>
+                    </div>
+
+                    <div class="settings-section-title">Contrast</div>
+                    <div class="settings-section-subtitle">Boosts borders and secondary text for easier reading.</div>
+                    <label class="radio-option">
+                        <input type="radio" name="contrastMode" value="standard">
+                        <span class="radio-dot"></span>
+                        <div class="radio-option-text">
+                            <div class="radio-option-title">Standard</div>
+                            <div class="radio-option-desc">Default contrast levels</div>
+                        </div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="contrastMode" value="high">
+                        <span class="radio-dot"></span>
+                        <div class="radio-option-text">
+                            <div class="radio-option-title">High contrast</div>
+                            <div class="radio-option-desc">Stronger borders and clearer text</div>
+                        </div>
+                    </label>
                 </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggleMentionNotifs">
-                    <span class="toggle-slider"></span>
-                </label>
             </div>
         </div>
     </div>
@@ -666,6 +893,10 @@ const ICONS = {
     close: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>`,
+    theme: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"/>
+    </svg>`,
 };
 
 const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
@@ -687,6 +918,21 @@ let presenceChannel = null;
 let friendsSubscription = null;
 let currentMode = 'friends';
 let onlineUserIds = new Set();
+let currentUserAvatarUrl = null;
+let currentUserBannerUrl = null;
+let currentUserBio = '';
+let bioSaveTimer = null;
+
+// Crop tool state
+let cropImageEl = null;
+let cropScale = 1;
+let cropMinScale = 1;
+let cropOffsetX = 0;
+let cropOffsetY = 0;
+let cropDragging = false;
+let cropDragStartX = 0;
+let cropDragStartY = 0;
+let cropTargetIsBanner = false; // false = avatar (circular crop), true = banner (no crop tool used)
 const deleteOnViewSet = new Set();
 const deleteTimers = {};
 
@@ -732,12 +978,16 @@ const settingsBtn          = document.getElementById('settingsBtn');
 const settingsOverlay      = document.getElementById('settingsOverlay');
 const settingsPanelTitle   = document.getElementById('settingsPanelTitle');
 const settingsCloseBtn     = document.getElementById('settingsCloseBtn');
-const allNotifsRow         = document.getElementById('allNotifsRow');
+const settingsNav          = document.getElementById('settingsNav');
+const navSettingsProfile   = document.getElementById('navSettingsProfile');
+const navSettingsNotifications = document.getElementById('navSettingsNotifications');
+const navSettingsTheme     = document.getElementById('navSettingsTheme');
 const friendReqSettingsRow = document.getElementById('friendReqSettingsRow');
 const mentionSettingsRow   = document.getElementById('mentionSettingsRow');
 const toggleAllNotifs      = document.getElementById('toggleAllNotifs');
 const toggleFriendReqNotifs= document.getElementById('toggleFriendReqNotifs');
 const toggleMentionNotifs  = document.getElementById('toggleMentionNotifs');
+const themeOptions         = document.getElementById('themeOptions');
 
 const EMOJI_LIST = [
     '😀','😁','😂','🤣','😊','😍','😘','😜','🤔','😎',
@@ -787,11 +1037,14 @@ async function checkAuthAndLoad() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) { window.location.href = 'index.html'; return; }
     currentUserId = session.user.id;
-    const { data: profile } = await _supabase.from('profiles').select('username').eq('id', currentUserId).single();
+    const { data: profile } = await _supabase.from('profiles').select('username, avatar_url, banner_url, bio').eq('id', currentUserId).single();
     if (profile) {
         currentUserUsername = profile.username;
+        currentUserAvatarUrl = profile.avatar_url;
+        currentUserBannerUrl = profile.banner_url;
+        currentUserBio = profile.bio || '';
         currentUserName.innerText = currentUserUsername;
-        currentUserAvatar.innerText = currentUserUsername.charAt(0).toUpperCase();
+        renderAvatarInto(currentUserAvatar, currentUserUsername, currentUserAvatarUrl);
     }
     await loadFriends();
     setupPresence();
@@ -800,6 +1053,8 @@ async function checkAuthAndLoad() {
     initVoiceRecording();
     initEmojiPicker();
     initNotificationSettings();
+    initProfileEditor();
+    initProfileViewer();
 }
 
 function setupOneSignal() {
@@ -907,7 +1162,7 @@ async function loadFriends() {
         friends = []; renderOnlineSidebar(); return;
     }
     const ids = fr.map(r => r.friend_id);
-    const { data: profiles } = await _supabase.from('profiles').select('id, username').in('id', ids);
+    const { data: profiles } = await _supabase.from('profiles').select('id, username, avatar_url').in('id', ids);
 
     const unreadMap = {};
     friends.forEach(f => { unreadMap[f.id] = f.unread || 0; });
@@ -915,6 +1170,7 @@ async function loadFriends() {
     friends = profiles.map(p => ({
         id: p.id,
         name: p.username,
+        avatar: p.avatar_url,
         unread: unreadMap[p.id] || 0,
         lastMsg: null,
         lastSender: null
@@ -947,7 +1203,8 @@ function renderFriendsList() {
         avatarWrap.className = 'avatar-wrap';
         const av = document.createElement('div');
         av.className = 'friend-avatar';
-        av.innerText = friend.name.charAt(0).toUpperCase();
+        renderAvatarInto(av, friend.name, friend.avatar);
+        av.addEventListener('click', (e) => { e.stopPropagation(); openProfileView(friend.id); });
         const dot = document.createElement('div');
         dot.className = 'online-dot' + (isOnline(friend.id) ? ' online' : '');
         avatarWrap.appendChild(av); avatarWrap.appendChild(dot);
@@ -980,10 +1237,20 @@ function renderOnlineSidebar() {
         const item = document.createElement('div');
         item.className = 'online-friend-item';
         item.onclick = () => openChat(f.id);
-        item.innerHTML = `
-            <div style="width:34px;height:34px;border-radius:50%;background:var(--card);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text);font-size:0.85rem;flex-shrink:0;">${f.name.charAt(0).toUpperCase()}</div>
-            <div style="font-size:0.85rem;font-weight:600;color:var(--text);">${f.name}</div>
-            <div style="margin-left:auto;width:9px;height:9px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>`;
+
+        const av = document.createElement('div');
+        av.style.cssText = 'width:34px;height:34px;border-radius:50%;background:var(--card);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text);font-size:0.85rem;flex-shrink:0;overflow:hidden;';
+        renderAvatarInto(av, f.name, f.avatar);
+        av.addEventListener('click', (e) => { e.stopPropagation(); openProfileView(f.id); });
+
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-size:0.85rem;font-weight:600;color:var(--text);';
+        nameEl.innerText = f.name;
+
+        const dot = document.createElement('div');
+        dot.style.cssText = 'margin-left:auto;width:9px;height:9px;border-radius:50%;background:var(--green);flex-shrink:0;';
+
+        item.appendChild(av); item.appendChild(nameEl); item.appendChild(dot);
         onlineFriendsList.appendChild(item);
     });
 }
@@ -993,10 +1260,14 @@ function updateChatHeader() {
     const friend = friends.find(f => f.id === currentChatId);
     if (!friend) return;
     const online = isOnline(currentChatId);
+    const avatarHtml = friend.avatar
+        ? `<div class="chat-header-avatar"><img src="${friend.avatar}"></div>`
+        : `<div class="chat-header-avatar">${friend.name.charAt(0).toUpperCase()}</div>`;
     chatHeader.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <span class="chat-header-name">${HEADER_ICON_PERSON}${friend.name}</span>
+        <span class="chat-header-name clickable" id="chatHeaderNameClickable">${avatarHtml}${friend.name}</span>
         <span class="chat-header-status"><span class="chat-header-dot ${online ? 'online' : ''}"></span>${online ? 'Online' : 'Offline'}</span>
     </div>`;
+    document.getElementById('chatHeaderNameClickable').addEventListener('click', () => openProfileView(currentChatId));
 }
 
 async function addNewFriend() {
@@ -1941,9 +2212,25 @@ function insertEmoji(emoji) {
 }
 
 // ================================================================
-// NOTIFICATION SETTINGS — gear icon beside the profile row opens a
-// panel with three toggles: disable all notifications, disable
-// friend-request notifications, disable mention notifications.
+// SETTINGS PANEL — nav (categories) + content switching
+// ================================================================
+function switchSettingsSection(sectionName) {
+    document.querySelectorAll('.settings-nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.section === sectionName);
+    });
+    document.querySelectorAll('.settings-section').forEach(sec => {
+        sec.classList.toggle('active', sec.id === `section-${sectionName}`);
+    });
+}
+
+function initSettingsNav() {
+    settingsNav.querySelectorAll('.settings-nav-item').forEach(item => {
+        item.addEventListener('click', () => switchSettingsSection(item.dataset.section));
+    });
+}
+
+// ================================================================
+// NOTIFICATION SETTINGS — disable all / friend requests / mentions.
 // Preferences persist per-user in localStorage and are mirrored onto
 // OneSignal (opt-out of push entirely for "all", or a mute tag for the
 // two granular categories that a sending function could check).
@@ -1971,7 +2258,7 @@ function saveNotificationPrefs(prefs) {
     }
 }
 
-function applyPrefsToUI(prefs) {
+function applyNotifPrefsToUI(prefs) {
     toggleAllNotifs.checked = prefs.disableAll;
     toggleFriendReqNotifs.checked = prefs.disableFriendReq;
     toggleMentionNotifs.checked = prefs.disableMentions;
@@ -1997,17 +2284,9 @@ function syncPrefsToOneSignal(prefs) {
 }
 
 function initNotificationSettings() {
-    settingsBtn.innerHTML = ICONS.settings;
-    settingsPanelTitle.innerHTML = `${ICONS.bell} Notification Settings`;
-    settingsCloseBtn.innerHTML = ICONS.close;
-
     const prefs = loadNotificationPrefs();
-    applyPrefsToUI(prefs);
+    applyNotifPrefsToUI(prefs);
     syncPrefsToOneSignal(prefs); // silent sync on load, no toast
-
-    settingsBtn.addEventListener('click', openSettingsPanel);
-    settingsCloseBtn.addEventListener('click', closeSettingsPanel);
-    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) closeSettingsPanel(); });
 
     [toggleAllNotifs, toggleFriendReqNotifs, toggleMentionNotifs].forEach(input => {
         input.addEventListener('change', onNotificationToggleChange);
@@ -2021,9 +2300,110 @@ function onNotificationToggleChange() {
         disableMentions: toggleMentionNotifs.checked,
     };
     saveNotificationPrefs(prefs);
-    applyPrefsToUI(prefs);
+    applyNotifPrefsToUI(prefs);
     syncPrefsToOneSignal(prefs);
     showToast(prefs.disableAll ? 'Notifications disabled' : 'Notification settings updated');
+}
+
+// ================================================================
+// THEME SETTINGS — Light / Dark / Extra Dark + Standard / High contrast.
+// A device-level display preference (not tied to a specific account),
+// so it's stored under one fixed key and applied instantly on load,
+// before auth even resolves, to avoid a flash of the wrong theme.
+// ================================================================
+const THEME_PREFS_KEY = 'avocado_theme_prefs';
+
+function loadThemePrefs() {
+    const defaults = { theme: 'light', contrast: 'standard' };
+    try {
+        const raw = localStorage.getItem(THEME_PREFS_KEY);
+        if (raw) return { ...defaults, ...JSON.parse(raw) };
+    } catch (err) {
+        console.error('Could not read theme prefs:', err);
+    }
+    return defaults;
+}
+
+function saveThemePrefs(prefs) {
+    try {
+        localStorage.setItem(THEME_PREFS_KEY, JSON.stringify(prefs));
+    } catch (err) {
+        console.error('Could not save theme prefs:', err);
+    }
+}
+
+function resolvedSystemIsDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function applyThemePrefs(prefs) {
+    document.body.classList.remove('theme-dark', 'theme-extra-dark', 'contrast-high');
+
+    let effectiveTheme = prefs.theme;
+    if (effectiveTheme === 'system') {
+        effectiveTheme = resolvedSystemIsDark() ? 'dark' : 'light';
+    }
+
+    if (effectiveTheme === 'dark') document.body.classList.add('theme-dark');
+    else if (effectiveTheme === 'extra-dark') document.body.classList.add('theme-extra-dark');
+    if (prefs.contrast === 'high') document.body.classList.add('contrast-high');
+
+    document.querySelectorAll('input[name="themeMode"]').forEach(r => { r.checked = (r.value === prefs.theme); });
+    document.querySelectorAll('input[name="contrastMode"]').forEach(r => { r.checked = (r.value === prefs.contrast); });
+    document.querySelectorAll('.theme-option').forEach(opt => {
+        const input = opt.querySelector('input');
+        opt.classList.toggle('selected', input.checked);
+    });
+}
+
+function initThemeSettings() {
+    const prefs = loadThemePrefs();
+    applyThemePrefs(prefs);
+
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            const current = loadThemePrefs();
+            if (current.theme === 'system') applyThemePrefs(current);
+        });
+    }
+
+    document.querySelectorAll('input[name="themeMode"]').forEach(r => {
+        r.addEventListener('change', () => {
+            const current = loadThemePrefs();
+            current.theme = r.value;
+            saveThemePrefs(current);
+            applyThemePrefs(current);
+            showToast('Theme updated');
+        });
+    });
+
+    document.querySelectorAll('input[name="contrastMode"]').forEach(r => {
+        r.addEventListener('change', () => {
+            const current = loadThemePrefs();
+            current.contrast = r.value;
+            saveThemePrefs(current);
+            applyThemePrefs(current);
+            showToast(r.value === 'high' ? 'High contrast enabled' : 'Standard contrast');
+        });
+    });
+}
+
+// ================================================================
+// SETTINGS PANEL open/close plumbing
+// ================================================================
+function initSettingsPanel() {
+    settingsBtn.innerHTML = ICONS.settings;
+    settingsPanelTitle.innerHTML = `${ICONS.settings} Settings`;
+    settingsCloseBtn.innerHTML = ICONS.close;
+    navSettingsNotifications.innerHTML = `${ICONS.bell} Notifications`;
+    navSettingsTheme.innerHTML = `${ICONS.theme} Theme`;
+    navSettingsProfile.innerHTML = `${HEADER_ICON_PERSON} Profile`;
+
+    initSettingsNav();
+
+    settingsBtn.addEventListener('click', openSettingsPanel);
+    settingsCloseBtn.addEventListener('click', closeSettingsPanel);
+    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) closeSettingsPanel(); });
 }
 
 function openSettingsPanel() {
@@ -2036,7 +2416,312 @@ function closeSettingsPanel() {
     settingsBtn.classList.remove('open');
 }
 
-document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
+// ================================================================
+// AVATAR RENDERING HELPER
+// Puts a real <img> in an avatar slot if a URL exists, otherwise
+// falls back to the existing letter-initial look.
+// ================================================================
+function renderAvatarInto(el, name, url) {
+    if (url) {
+        el.innerHTML = `<img src="${url}" alt="${escapeHtml(name || '')}">`;
+    } else {
+        el.innerHTML = '';
+        el.innerText = (name || '?').charAt(0).toUpperCase();
+    }
+}
+
+// ================================================================
+// SUPABASE STORAGE UPLOAD
+// Uploads to the `avatars` bucket at a stable per-user path so
+// repeated uploads simply overwrite the old file (upsert: true).
+// A cache-busting query param is added to the saved URL so the
+// browser doesn't keep showing a stale cached image.
+// ================================================================
+async function uploadProfileImage(fileOrBlob, kind /* 'avatar' | 'banner' */, ext) {
+    const path = `${currentUserId}/${kind}.${ext}`;
+    const { error: uploadError } = await _supabase.storage
+        .from('avatars')
+        .upload(path, fileOrBlob, { upsert: true, contentType: fileOrBlob.type || `image/${ext}` });
+
+    if (uploadError) {
+        console.error('Upload error:', uploadError);
+        showToast('Upload failed');
+        return null;
+    }
+
+    const { data } = _supabase.storage.from('avatars').getPublicUrl(path);
+    return `${data.publicUrl}?t=${Date.now()}`;
+}
+
+function extFromFile(file) {
+    if (file.type === 'image/gif') return 'gif';
+    if (file.type === 'image/png') return 'png';
+    if (file.type === 'image/webp') return 'webp';
+    return 'jpg';
+}
+
+// ================================================================
+// PROFILE EDITOR (Settings → Profile tab)
+// ================================================================
+function initProfileEditor() {
+    renderProfileEditorUI();
+
+    document.getElementById('profileBannerWrap').addEventListener('click', (e) => {
+        if (e.target.closest('#profileAvatarEditor')) return; // avatar click handled separately
+        document.getElementById('bannerFileInput').click();
+    });
+
+    document.getElementById('profileAvatarEditor').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('avatarFileInput').click();
+    });
+
+    document.getElementById('avatarFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        handleAvatarFileSelected(file);
+        e.target.value = '';
+    });
+
+    document.getElementById('bannerFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        handleBannerFileSelected(file);
+        e.target.value = '';
+    });
+
+    const bioInput = document.getElementById('profileBioInput');
+    bioInput.value = currentUserBio;
+    bioInput.addEventListener('input', () => {
+        clearTimeout(bioSaveTimer);
+        bioSaveTimer = setTimeout(async () => {
+            currentUserBio = bioInput.value;
+            await _supabase.from('profiles').update({ bio: currentUserBio }).eq('id', currentUserId);
+        }, 600);
+    });
+
+    // Clicking your own avatar in the sidebar jumps straight to the profile editor
+    currentUserAvatar.addEventListener('click', () => {
+        openSettingsPanel();
+        switchSettingsSection('profile');
+    });
+
+    // Crop modal wiring
+    document.getElementById('cropCancelBtn').addEventListener('click', closeCropModal);
+    document.getElementById('cropConfirmBtn').addEventListener('click', confirmCrop);
+    document.getElementById('cropZoomSlider').addEventListener('input', (e) => {
+        cropScale = parseFloat(e.target.value);
+        drawCrop();
+    });
+    setupCropDragHandlers();
+}
+
+function renderProfileEditorUI() {
+    const bannerInner = document.getElementById('profileBannerInner');
+    const placeholder = document.getElementById('profileBannerPlaceholder');
+    const oldImg = bannerInner.querySelector('img');
+    if (oldImg) oldImg.remove();
+
+    if (currentUserBannerUrl) {
+        placeholder.style.display = 'none';
+        const img = document.createElement('img');
+        img.src = currentUserBannerUrl;
+        bannerInner.insertBefore(img, bannerInner.firstChild);
+    } else {
+        placeholder.style.display = 'flex';
+    }
+
+    const avatarEditor = document.getElementById('profileAvatarEditor');
+    const letterSpan = document.getElementById('profileAvatarEditorLetter');
+    const oldAvatarImg = avatarEditor.querySelector('img');
+    if (oldAvatarImg) oldAvatarImg.remove();
+
+    if (currentUserAvatarUrl) {
+        letterSpan.style.display = 'none';
+        const img = document.createElement('img');
+        img.src = currentUserAvatarUrl;
+        avatarEditor.insertBefore(img, avatarEditor.firstChild);
+    } else {
+        letterSpan.style.display = 'block';
+        letterSpan.innerText = (currentUserUsername || '?').charAt(0).toUpperCase();
+    }
+
+    document.getElementById('profileBioInput').value = currentUserBio;
+}
+
+// GIFs skip the crop tool entirely (canvas cropping only captures a single
+// frame, which would kill the animation) and upload as-is. Static images
+// go through the circular crop tool for a clean, centered result.
+function handleAvatarFileSelected(file) {
+    if (file.type === 'image/gif') {
+        uploadAvatarDirect(file);
+        return;
+    }
+    cropTargetIsBanner = false;
+    openCropModal(file);
+}
+
+async function handleBannerFileSelected(file) {
+    const ext = extFromFile(file);
+    showToast('Uploading banner...');
+    const url = await uploadProfileImage(file, 'banner', ext);
+    if (!url) return;
+    currentUserBannerUrl = url;
+    await _supabase.from('profiles').update({ banner_url: url }).eq('id', currentUserId);
+    renderProfileEditorUI();
+    showToast('Banner updated!');
+}
+
+async function uploadAvatarDirect(file) {
+    showToast('Uploading avatar...');
+    const url = await uploadProfileImage(file, 'avatar', 'gif');
+    if (!url) return;
+    currentUserAvatarUrl = url;
+    await _supabase.from('profiles').update({ avatar_url: url }).eq('id', currentUserId);
+    renderAvatarInto(currentUserAvatar, currentUserUsername, currentUserAvatarUrl);
+    renderProfileEditorUI();
+    showToast('Avatar updated!');
+}
+
+// ================================================================
+// CIRCULAR CROP TOOL (static images only)
+// ================================================================
+function openCropModal(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+        cropImageEl = new Image();
+        cropImageEl.onload = () => {
+            const canvas = document.getElementById('cropCanvas');
+            const size = canvas.width; // 300
+            cropMinScale = Math.max(size / cropImageEl.width, size / cropImageEl.height);
+            cropScale = cropMinScale;
+            cropOffsetX = 0;
+            cropOffsetY = 0;
+            document.getElementById('cropZoomSlider').min = cropMinScale;
+            document.getElementById('cropZoomSlider').max = cropMinScale * 4;
+            document.getElementById('cropZoomSlider').value = cropScale;
+            document.getElementById('cropOverlay').style.display = 'flex';
+            drawCrop();
+        };
+        cropImageEl.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function closeCropModal() {
+    document.getElementById('cropOverlay').style.display = 'none';
+    cropImageEl = null;
+}
+
+function drawCrop() {
+    if (!cropImageEl) return;
+    const canvas = document.getElementById('cropCanvas');
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    ctx.clearRect(0, 0, size, size);
+
+    const w = cropImageEl.width * cropScale;
+    const h = cropImageEl.height * cropScale;
+    const x = (size - w) / 2 + cropOffsetX;
+    const y = (size - h) / 2 + cropOffsetY;
+
+    ctx.drawImage(cropImageEl, x, y, w, h);
+}
+
+function setupCropDragHandlers() {
+    const wrap = document.getElementById('cropCanvasWrap');
+
+    const start = (clientX, clientY) => {
+        cropDragging = true;
+        cropDragStartX = clientX - cropOffsetX;
+        cropDragStartY = clientY - cropOffsetY;
+    };
+    const move = (clientX, clientY) => {
+        if (!cropDragging) return;
+        cropOffsetX = clientX - cropDragStartX;
+        cropOffsetY = clientY - cropDragStartY;
+        drawCrop();
+    };
+    const end = () => { cropDragging = false; };
+
+    wrap.addEventListener('mousedown', (e) => start(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+    window.addEventListener('mouseup', end);
+
+    wrap.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        start(t.clientX, t.clientY);
+    }, { passive: true });
+    wrap.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        move(t.clientX, t.clientY);
+    }, { passive: true });
+    wrap.addEventListener('touchend', end);
+}
+
+async function confirmCrop() {
+    const canvas = document.getElementById('cropCanvas');
+    canvas.toBlob(async (blob) => {
+        if (!blob) { showToast('Crop failed'); return; }
+        closeCropModal();
+        showToast('Uploading avatar...');
+        const url = await uploadProfileImage(blob, 'avatar', 'jpg');
+        if (!url) return;
+        currentUserAvatarUrl = url;
+        await _supabase.from('profiles').update({ avatar_url: url }).eq('id', currentUserId);
+        renderAvatarInto(currentUserAvatar, currentUserUsername, currentUserAvatarUrl);
+        renderProfileEditorUI();
+        showToast('Avatar updated!');
+    }, 'image/jpeg', 0.92);
+}
+
+// ================================================================
+// PROFILE VIEWER — click anyone's avatar/name to see their card
+// ================================================================
+function initProfileViewer() {
+    document.getElementById('profileViewCloseBtn').innerHTML = ICONS.close;
+    document.getElementById('profileViewCloseBtn').addEventListener('click', closeProfileView);
+    document.getElementById('profileViewOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'profileViewOverlay') closeProfileView();
+    });
+}
+
+async function openProfileView(userId) {
+    const { data: p } = await _supabase.from('profiles').select('username, avatar_url, banner_url, bio').eq('id', userId).maybeSingle();
+    if (!p) { showToast('Could not load profile'); return; }
+
+    const bannerEl = document.getElementById('profileViewBanner');
+    const oldBannerImg = bannerEl.querySelector('img');
+    if (oldBannerImg) oldBannerImg.remove();
+    if (p.banner_url) {
+        const img = document.createElement('img');
+        img.src = p.banner_url;
+        bannerEl.insertBefore(img, bannerEl.firstChild);
+    }
+
+    renderAvatarInto(document.getElementById('profileViewAvatar'), p.username, p.avatar_url);
+    document.getElementById('profileViewName').innerText = p.username;
+    document.getElementById('profileViewBio').innerText = p.bio || 'No bio yet.';
+
+    document.getElementById('profileViewOverlay').style.display = 'flex';
+}
+
+function closeProfileView() {
+    document.getElementById('profileViewOverlay').style.display = 'none';
+}
+
+
+// Theme + settings-panel plumbing don't need auth, so they run immediately
+// on DOM ready — this also means the saved theme applies before any network
+// call finishes, avoiding a flash of the wrong palette.
+document.addEventListener('DOMContentLoaded', () => {
+    initSettingsPanel();
+    initThemeSettings();
+    checkAuthAndLoad();
+});
+
+
+
 </script>
 </body>
 </html>
