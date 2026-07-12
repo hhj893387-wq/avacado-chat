@@ -231,7 +231,8 @@
 .profile-banner-inner { position: absolute; inset: 0; border-radius: 11px; overflow: hidden; }
 .profile-banner-inner img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .profile-banner-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 0.8rem; font-weight: 700; }
-.profile-avatar-editor { position: absolute; left: 20px; bottom: -36px; width: 84px; height: 84px; border-radius: 50%; border: 4px solid var(--bg); background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.6rem; cursor: pointer; overflow: hidden; z-index: 2; }
+.profile-avatar-editor { position: absolute; left: 20px; bottom: -36px; width: 84px; height: 84px; border-radius: 50%; border: 4px solid var(--bg); background: var(--card); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.6rem; cursor: pointer; overflow: hidden; z-index: 2; }
+.profile-avatar-editor img { width: 100%; height: 100%; object-fit: cover; }
 .profile-editor-hint { position: absolute; inset: 0; background: rgba(0,0,0,0.35); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; opacity: 0; transition: opacity 0.15s ease; }
 .profile-banner-wrap:hover .profile-editor-hint, .profile-avatar-editor:hover .profile-editor-hint { opacity: 1; }
 .profile-bio-input { width: 100%; min-height: 80px; padding: 12px 14px; border: 2px solid var(--border); border-radius: 13px; background: var(--card); color: var(--text); font-family: inherit; font-size: 0.85rem; font-weight: 500; resize: vertical; outline: none; }
@@ -764,11 +765,11 @@
     <div class="profile-banner-wrap" id="profileBannerWrap">
     <div class="profile-banner-inner" id="profileBannerInner">
     <div class="profile-banner-placeholder" id="profileBannerPlaceholder">Click to add a banner</div>
-    <div class="profile-editor-hint">Change banner</div>
+    <div class="profile-editor-hint" id="bannerEditorHint"></div>
     </div>
     <div class="profile-avatar-editor" id="profileAvatarEditor">
     <span id="profileAvatarEditorLetter"></span>
-    <div class="profile-editor-hint">Change avatar</div>
+    <div class="profile-editor-hint" id="avatarEditorHint"></div>
     </div>
 </div>
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
@@ -893,11 +894,16 @@ const ICONS = {
     close: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>`,
-    theme: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+   theme: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="9"/>
         <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"/>
     </svg>`,
+    pencil: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>
+        <path d="M15 5l4 4"/>
+    </svg>`,
 };
+
 
 const SUPABASE_URL = 'https://mmnibgqfamzbxwcegjgu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbmliZ3FmYW16Ynh3Y2Vnamd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTYwNzYsImV4cCI6MjA5OTE3MjA3Nn0.kxxKXHkUceloqQVg6JjWPBVCP_R-TQ7QRn6LKj9nuQ4';
@@ -2464,6 +2470,8 @@ function extFromFile(file) {
 // PROFILE EDITOR (Settings → Profile tab)
 // ================================================================
 function initProfileEditor() {
+    document.getElementById('bannerEditorHint').innerHTML = ICONS.pencil;
+    document.getElementById('avatarEditorHint').innerHTML = ICONS.pencil;
     renderProfileEditorUI();
 
     document.getElementById('profileBannerWrap').addEventListener('click', (e) => {
