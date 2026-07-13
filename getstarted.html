@@ -3134,6 +3134,12 @@ function endCall() {
     closeCallUI();
 }
 
+
+function minimizeCall() {
+    document.getElementById('callOverlay').style.display = 'none';
+    document.getElementById('callBar').style.display = 'flex';
+}
+
 function closeCallUI() {
     if (peerConnection) { peerConnection.close(); peerConnection = null; }
     if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
