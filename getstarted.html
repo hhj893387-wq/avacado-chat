@@ -570,6 +570,35 @@
         }
         .toast.show { opacity: 1; }
 
+
+       /* ── VOICE CALL UI ── */
+.call-overlay { position: fixed; inset: 0; background: rgba(20,20,16,0.75); z-index: 50000; display: none; align-items: center; justify-content: center; }
+.call-card { width: 380px; max-width: calc(100vw - 40px); border-radius: 20px; overflow: hidden; background: var(--bg); border: 2px solid var(--border); }
+.call-banner-wrap { position: relative; height: 200px; background: var(--card); display: flex; align-items: center; justify-content: center; }
+.call-banner-wrap img.call-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(2px) brightness(0.55); }
+.call-banner-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.55)); }
+.call-avatar-ring { position: relative; width: 96px; height: 96px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.85); overflow: hidden; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 2rem; z-index: 2; }
+.call-avatar-ring img { width: 100%; height: 100%; object-fit: cover; }
+.call-avatar-ring.ringing { animation: callPulse 1.4s ease-in-out infinite; }
+@keyframes callPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(88,204,2,0.5); } 50% { box-shadow: 0 0 0 14px rgba(88,204,2,0); } }
+.call-name { position: absolute; bottom: 14px; left: 20px; color: #fff; font-weight: 800; font-size: 1.1rem; z-index: 2; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+.call-status { position: absolute; bottom: -6px; left: 20px; transform: translateY(100%); color: var(--text-light); font-size: 0.8rem; font-weight: 600; }
+.call-body { padding: 34px 20px 22px; text-align: center; }
+.call-controls { display: flex; justify-content: center; gap: 14px; margin-top: 8px; }
+.call-ctrl-btn { width: 52px; height: 52px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--card); color: var(--text); transition: filter 0.15s ease, transform 0.08s ease; }
+.call-ctrl-btn:hover { filter: brightness(1.06); }
+.call-ctrl-btn:active { transform: scale(0.94); }
+.call-ctrl-btn.active-toggle { background: var(--green); color: #fff; }
+.call-ctrl-btn.hangup { background: var(--red); color: #fff; }
+.call-bar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: var(--card); border: 2px solid var(--border); border-radius: 13px; padding: 8px 14px; display: none; align-items: center; gap: 10px; z-index: 15000; cursor: pointer; }
+.call-bar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: recPulse 1.1s ease-in-out infinite; }
+.call-bar-text { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.incoming-call-toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: var(--bg); border: 2px solid var(--green); border-radius: 13px; padding: 12px 16px; display: none; align-items: center; gap: 12px; z-index: 16000; box-shadow: 0 10px 28px rgba(0,0,0,0.15); }
+.incoming-call-actions { display: flex; gap: 8px; }
+.incoming-call-actions button { width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.call-icon-btn { background: var(--card); border: 2px solid var(--border); color: var(--text-light); width: 40px; height: 40px; border-radius: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: border-color 0.2s ease, color 0.2s ease; }
+.call-icon-btn:hover { border-color: var(--teal); color: var(--teal); }
+
      .settings-nav-item.danger-nav { color: var(--red); }
      .settings-nav-item.danger-nav:hover { background: #FFEDED; color: var(--red); }
 
@@ -593,6 +622,44 @@
     </style>
 </head>
 <body>
+
+
+    <div class="call-icon-btn" id="startCallBtn" title="Voice call" style="display:none;"></div>
+
+<audio id="remoteAudioEl" autoplay></audio>
+
+<div class="incoming-call-toast" id="incomingCallToast">
+    <div id="incomingCallText" style="font-weight:700;font-size:0.88rem;color:var(--text);"></div>
+    <div class="incoming-call-actions">
+        <button id="incomingCallAccept" style="background:var(--green);color:#fff;"></button>
+        <button id="incomingCallDecline" style="background:var(--red);color:#fff;"></button>
+    </div>
+</div>
+
+<div class="call-bar" id="callBar">
+    <div class="call-bar-dot"></div>
+    <div class="call-bar-text" id="callBarText">In call</div>
+</div>
+
+<div class="call-overlay" id="callOverlay">
+    <div class="call-card">
+        <div class="call-banner-wrap" id="callBannerWrap">
+            <div class="call-banner-overlay"></div>
+            <div class="call-avatar-ring" id="callAvatarRing"></div>
+            <div class="call-name" id="callName"></div>
+        </div>
+        <div class="call-body">
+            <div class="call-status" id="callStatus">Ringing…</div>
+            <div class="call-controls" style="margin-top:20px;">
+                <button type="button" class="call-ctrl-btn" id="callMuteBtn" title="Mute"></button>
+                <button type="button" class="call-ctrl-btn" id="callSpeakerBtn" title="Speaker"></button>
+                <button type="button" class="call-ctrl-btn hangup" id="callHangupBtn" title="Hang up"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <div class="crop-overlay" id="cropOverlay">
     <div class="crop-modal">
@@ -819,6 +886,8 @@
 </div>
 
                 
+
+
                 <!-- Theme section -->
                 <div class="settings-section" id="section-theme">
                     <div class="settings-section-title">App theme</div>
@@ -1105,7 +1174,9 @@ async function checkAuthAndLoad() {
     initNotificationSettings();
     initProfileEditor();
     initProfileViewer();
+    initVoiceCalls();
 }
+
 
 function setupOneSignal() {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -1313,13 +1384,18 @@ function updateChatHeader() {
     const avatarHtml = friend.avatar
         ? `<div class="chat-header-avatar"><img src="${friend.avatar}"></div>`
         : `<div class="chat-header-avatar">${friend.name.charAt(0).toUpperCase()}</div>`;
-    chatHeader.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <span class="chat-header-name clickable" id="chatHeaderNameClickable">${avatarHtml}${friend.name}</span>
-        <span class="chat-header-status"><span class="chat-header-dot ${online ? 'online' : ''}"></span>${online ? 'Online' : 'Offline'}</span>
+    chatHeader.innerHTML = `<div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <span class="chat-header-name clickable" id="chatHeaderNameClickable">${avatarHtml}${friend.name}</span>
+            <span class="chat-header-status"><span class="chat-header-dot ${online ? 'online' : ''}"></span>${online ? 'Online' : 'Offline'}</span>
+        </div>
+        <div class="call-icon-btn" id="startCallBtnInline" title="Voice call"></div>
     </div>`;
     document.getElementById('chatHeaderNameClickable').addEventListener('click', () => openProfileView(currentChatId));
+    const callBtn = document.getElementById('startCallBtnInline');
+    callBtn.innerHTML = CALL_ICONS.phone;
+    callBtn.addEventListener('click', () => startCall(currentChatId));
 }
-
 async function addNewFriend() {
     const username = friendInput.value.trim();
     friendError.style.display = 'none';
@@ -2860,7 +2936,209 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthAndLoad();
 });
 
+// ================================================================
+// VOICE CALLS — WebRTC peer-to-peer, signaled over Supabase Realtime
+// (free: no third-party call service, uses your existing Supabase project)
+// ================================================================
+const CALL_ICONS = {
+    phone: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+    mic: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+    micOff: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+    speaker: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
+    speakerOff: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`,
+    hangup: `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+};
 
+let callChannel = null;
+let peerConnection = null;
+let localStream = null;
+let currentCallPeerId = null;
+let currentCallPeerName = null;
+let callState = 'idle'; // idle | calling | ringing | connected
+let callMuted = false;
+let callSpeakerOff = false;
+let incomingCallFrom = null;
+let callDurationInterval = null;
+let callStartTime = null;
+
+const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }; // free public STUN
+
+function initVoiceCalls() {
+    document.getElementById('callMuteBtn').innerHTML = CALL_ICONS.mic;
+    document.getElementById('callSpeakerBtn').innerHTML = CALL_ICONS.speaker;
+    document.getElementById('callHangupBtn').innerHTML = CALL_ICONS.hangup;
+    document.getElementById('incomingCallAccept').innerHTML = CALL_ICONS.phone;
+    document.getElementById('incomingCallDecline').innerHTML = CALL_ICONS.hangup;
+    document.getElementById('startCallBtn').innerHTML = CALL_ICONS.phone;
+
+    document.getElementById('callMuteBtn').addEventListener('click', toggleMute);
+    document.getElementById('callSpeakerBtn').addEventListener('click', toggleSpeaker);
+    document.getElementById('callHangupBtn').addEventListener('click', endCall);
+    document.getElementById('incomingCallAccept').addEventListener('click', acceptIncomingCall);
+    document.getElementById('incomingCallDecline').addEventListener('click', declineIncomingCall);
+    document.getElementById('startCallBtn').addEventListener('click', () => { if (currentChatId) startCall(currentChatId); });
+    document.getElementById('callBar').addEventListener('click', () => { document.getElementById('callOverlay').style.display = 'flex'; document.getElementById('callBar').style.display = 'none'; });
+
+    setupCallSignaling();
+}
+
+// One personal signaling channel per user, always listening for offers/answers/ICE
+function setupCallSignaling() {
+    if (callChannel) _supabase.removeChannel(callChannel);
+    callChannel = _supabase.channel(`call-signal-${currentUserId}`)
+        .on('broadcast', { event: 'offer' }, async ({ payload }) => {
+            if (callState !== 'idle') { sendSignal(payload.from, 'busy', {}); return; }
+            incomingCallFrom = payload.from;
+            const friend = friends.find(f => f.id === payload.from);
+            currentCallPeerName = friend ? friend.name : 'Someone';
+            document.getElementById('incomingCallText').innerText = `${currentCallPeerName} is calling…`;
+            document.getElementById('incomingCallToast').style.display = 'flex';
+            window._pendingOffer = payload.sdp;
+        })
+        .on('broadcast', { event: 'answer' }, async ({ payload }) => {
+            if (peerConnection) await peerConnection.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+            callState = 'connected';
+            startCallTimer();
+            document.getElementById('callStatus').innerText = '00:00';
+        })
+        .on('broadcast', { event: 'ice' }, async ({ payload }) => {
+            if (peerConnection && payload.candidate) {
+                try { await peerConnection.addIceCandidate(new RTCIceCandidate(payload.candidate)); } catch (e) { console.error(e); }
+            }
+        })
+        .on('broadcast', { event: 'hangup' }, () => { closeCallUI(); })
+        .on('broadcast', { event: 'busy' }, () => { showToast(`${currentCallPeerName || 'They'} are already in a call`); closeCallUI(); })
+        .subscribe();
+}
+
+function sendSignal(toUserId, event, payload) {
+    _supabase.channel(`call-signal-${toUserId}`).send({
+        type: 'broadcast', event, payload: { from: currentUserId, ...payload }
+    });
+}
+
+async function createPeerConnection(remoteUserId) {
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    pc.onicecandidate = (e) => { if (e.candidate) sendSignal(remoteUserId, 'ice', { candidate: e.candidate }); };
+    pc.ontrack = (e) => { document.getElementById('remoteAudioEl').srcObject = e.streams[0]; };
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    return pc;
+}
+
+async function startCall(friendId) {
+    if (callState !== 'idle') { showToast('Already in a call'); return; }
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+        showToast('Microphone access denied');
+        return;
+    }
+    const friend = friends.find(f => f.id === friendId);
+    currentCallPeerId = friendId;
+    currentCallPeerName = friend ? friend.name : 'Someone';
+    callState = 'calling';
+
+    peerConnection = await createPeerConnection(friendId);
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    sendSignal(friendId, 'offer', { sdp: offer });
+
+    openCallUI(friend, 'Ringing…', true);
+}
+
+async function acceptIncomingCall() {
+    document.getElementById('incomingCallToast').style.display = 'none';
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+        showToast('Microphone access denied');
+        sendSignal(incomingCallFrom, 'hangup', {});
+        return;
+    }
+    currentCallPeerId = incomingCallFrom;
+    const friend = friends.find(f => f.id === incomingCallFrom);
+    peerConnection = await createPeerConnection(incomingCallFrom);
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(window._pendingOffer));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    sendSignal(incomingCallFrom, 'answer', { sdp: answer });
+
+    callState = 'connected';
+    openCallUI(friend, '00:00', false);
+    startCallTimer();
+}
+
+function declineIncomingCall() {
+    document.getElementById('incomingCallToast').style.display = 'none';
+    sendSignal(incomingCallFrom, 'hangup', {});
+    incomingCallFrom = null;
+}
+
+function openCallUI(friend, statusText, ringing) {
+    const wrap = document.getElementById('callBannerWrap');
+    const oldImg = wrap.querySelector('img.call-banner-img');
+    if (oldImg) oldImg.remove();
+    if (friend && friend.avatar) {
+        const img = document.createElement('img');
+        img.className = 'call-banner-img';
+        img.src = friend.avatar;
+        wrap.insertBefore(img, wrap.firstChild);
+    }
+    const ring = document.getElementById('callAvatarRing');
+    ring.className = 'call-avatar-ring' + (ringing ? ' ringing' : '');
+    renderAvatarInto(ring, currentCallPeerName, friend ? friend.avatar : null);
+    document.getElementById('callName').innerText = currentCallPeerName || 'Someone';
+    document.getElementById('callStatus').innerText = statusText;
+    document.getElementById('callOverlay').style.display = 'flex';
+    document.getElementById('callBar').style.display = 'none';
+}
+
+function startCallTimer() {
+    callStartTime = Date.now();
+    if (callDurationInterval) clearInterval(callDurationInterval);
+    callDurationInterval = setInterval(() => {
+        const sec = Math.floor((Date.now() - callStartTime) / 1000);
+        const text = formatDuration(sec);
+        document.getElementById('callStatus').innerText = text;
+        document.getElementById('callBarText').innerText = `${currentCallPeerName} — ${text}`;
+    }, 1000);
+}
+
+function toggleMute() {
+    if (!localStream) return;
+    callMuted = !callMuted;
+    localStream.getAudioTracks().forEach(t => t.enabled = !callMuted);
+    const btn = document.getElementById('callMuteBtn');
+    btn.innerHTML = callMuted ? CALL_ICONS.micOff : CALL_ICONS.mic;
+    btn.classList.toggle('active-toggle', !callMuted);
+}
+
+function toggleSpeaker() {
+    callSpeakerOff = !callSpeakerOff;
+    const audioEl = document.getElementById('remoteAudioEl');
+    audioEl.muted = callSpeakerOff;
+    const btn = document.getElementById('callSpeakerBtn');
+    btn.innerHTML = callSpeakerOff ? CALL_ICONS.speakerOff : CALL_ICONS.speaker;
+    btn.classList.toggle('active-toggle', !callSpeakerOff);
+}
+
+function endCall() {
+    if (currentCallPeerId) sendSignal(currentCallPeerId, 'hangup', {});
+    closeCallUI();
+}
+
+function closeCallUI() {
+    if (peerConnection) { peerConnection.close(); peerConnection = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    if (callDurationInterval) { clearInterval(callDurationInterval); callDurationInterval = null; }
+    callState = 'idle';
+    currentCallPeerId = null;
+    incomingCallFrom = null;
+    document.getElementById('callOverlay').style.display = 'none';
+    document.getElementById('callBar').style.display = 'none';
+    document.getElementById('incomingCallToast').style.display = 'none';
+    document.getElementById('remoteAudioEl').srcObject = null;
+}
 
 </script>
 </body>
