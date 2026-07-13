@@ -743,9 +743,9 @@
         </div>
 
         <div id="chatZone" style="display:none;">
-            <div class="chat-messages-container" id="messageContainer">
-                <div style="text-align:center;color:var(--text-light);font-weight:500;margin-top:20px;">No messages yet. Say hi!</div>
-            </div>
+          <div class="chat-messages-container" id="messageContainer">
+            <div id="noMsgPlaceholder" style="text-align:center;color:var(--text-light);font-weight:500;margin-top:20px;">No messages yet. Say hi!</div>
+        </div>
             <div id="mentionDropdown" class="mention-dropdown" style="display:none;"></div>
             <div id="emojiPicker" class="emoji-picker" style="display:none;"></div>
             <div class="chat-input-area" id="chatInputArea">
@@ -1506,7 +1506,7 @@ async function loadMessages(friendId) {
 
     messageContainer.innerHTML = '';
     if (!messages || messages.length === 0) {
-        messageContainer.innerHTML = '<div style="text-align:center;color:var(--text-light);font-weight:500;margin-top:20px;">No messages yet. Say hi!</div>';
+        messageContainer.innerHTML = '<div id="noMsgPlaceholder" style="text-align:center;color:var(--text-light);font-weight:500;margin-top:20px;">No messages yet. Say hi!</div>';
         return;
     }
     messages.forEach(msg => appendMessageToDOM(msg));
@@ -1514,6 +1514,9 @@ async function loadMessages(friendId) {
 }
 
 function appendMessageToDOM(msg, prepend = false) {
+    const placeholder = document.getElementById('noMsgPlaceholder');
+    if (placeholder) placeholder.remove();
+
     const isSent = msg.sender_id === currentUserId;
     const isSeen = !!msg.seen_at;
     const isVoice = typeof msg.content === 'string' && msg.content.startsWith(VOICE_MSG_PREFIX);
