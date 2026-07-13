@@ -263,7 +263,7 @@
 
 
         .chat-panel { flex: 1; display: flex; flex-direction: column; background-color: var(--bg); border-right: 2px solid var(--border); height: 100%; min-height: 0; overflow: hidden; transition: background-color 0.2s ease, border-color 0.2s ease; }
-        .chat-header { padding: 15px 20px; background-color: var(--bg); border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0; }
+        .chat-header { padding: 15px 20px; background-color: var(--bg); border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0; position: relative; }
         .chat-header svg { opacity: 0.8; }
         .chat-header-name { font-size: 1.05rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
         .chat-header-status { font-size: 0.75rem; color: var(--text-light); font-weight: 600; display: flex; align-items: center; gap: 4px; }
@@ -618,7 +618,7 @@
 .profile-discard-btn { background: var(--card); color: var(--text); border: 2px solid var(--border) !important; padding: 8px 14px; font-size: 0.8rem; }
 .profile-save-btn { background: var(--green); color: #fff; padding: 10px 22px; flex-shrink: 0; }
 .profile-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
+.call-minimize-btn { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.3); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 3; }
     </style>
 </head>
 <body>
@@ -645,6 +645,7 @@
     <div class="call-card">
         <div class="call-banner-wrap" id="callBannerWrap">
             <div class="call-banner-overlay"></div>
+            <button type="button" class="call-minimize-btn" id="callMinimizeBtn" title="Minimize and keep chatting"></button>
             <div class="call-avatar-ring" id="callAvatarRing"></div>
             <div class="call-name" id="callName"></div>
         </div>
@@ -1384,13 +1385,11 @@ function updateChatHeader() {
     const avatarHtml = friend.avatar
         ? `<div class="chat-header-avatar"><img src="${friend.avatar}"></div>`
         : `<div class="chat-header-avatar">${friend.name.charAt(0).toUpperCase()}</div>`;
-    chatHeader.innerHTML = `<div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:center;">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+    chatHeader.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
             <span class="chat-header-name clickable" id="chatHeaderNameClickable">${avatarHtml}${friend.name}</span>
             <span class="chat-header-status"><span class="chat-header-dot ${online ? 'online' : ''}"></span>${online ? 'Online' : 'Offline'}</span>
         </div>
-        <div class="call-icon-btn" id="startCallBtnInline" title="Voice call"></div>
-    </div>`;
+        <div class="call-icon-btn chat-header-call-btn" id="startCallBtnInline" title="Voice call"></div>`;
     document.getElementById('chatHeaderNameClickable').addEventListener('click', () => openProfileView(currentChatId));
     const callBtn = document.getElementById('startCallBtnInline');
     callBtn.innerHTML = CALL_ICONS.phone;
@@ -2027,6 +2026,7 @@ function updateMicSendVisibility() {
 
 async function startRecording() {
     if (!currentChatId) { showToast('Open a chat first'); return; }
+    if (callState !== 'idle') { showToast('Voice recording is unavailable during a call'); return; }
     closeEmojiPicker();
     closeMentionDropdown();
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -2968,7 +2968,7 @@ function initVoiceCalls() {
     document.getElementById('callSpeakerBtn').innerHTML = CALL_ICONS.speaker;
     document.getElementById('callHangupBtn').innerHTML = CALL_ICONS.hangup;
     document.getElementById('incomingCallAccept').innerHTML = CALL_ICONS.phone;
-    document.getElementById('incomingCallDecline').innerHTML = CALL_ICONS.hangup;
+    document.getElementById('incomingCallDecline').innerHTML = ICONS.close;
     document.getElementById('startCallBtn').innerHTML = CALL_ICONS.phone;
 
     document.getElementById('callMuteBtn').addEventListener('click', toggleMute);
@@ -2976,8 +2976,10 @@ function initVoiceCalls() {
     document.getElementById('callHangupBtn').addEventListener('click', endCall);
     document.getElementById('incomingCallAccept').addEventListener('click', acceptIncomingCall);
     document.getElementById('incomingCallDecline').addEventListener('click', declineIncomingCall);
-    document.getElementById('startCallBtn').addEventListener('click', () => { if (currentChatId) startCall(currentChatId); });
+   document.getElementById('startCallBtn').addEventListener('click', () => { if (currentChatId) startCall(currentChatId); });
     document.getElementById('callBar').addEventListener('click', () => { document.getElementById('callOverlay').style.display = 'flex'; document.getElementById('callBar').style.display = 'none'; });
+    document.getElementById('callMinimizeBtn').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    document.getElementById('callMinimizeBtn').addEventListener('click', minimizeCall);
 
     setupCallSignaling();
 }
@@ -2995,11 +2997,12 @@ function setupCallSignaling() {
             document.getElementById('incomingCallToast').style.display = 'flex';
             window._pendingOffer = payload.sdp;
         })
-        .on('broadcast', { event: 'answer' }, async ({ payload }) => {
+       .on('broadcast', { event: 'answer' }, async ({ payload }) => {
             if (peerConnection) await peerConnection.setRemoteDescription(new RTCSessionDescription(payload.sdp));
             callState = 'connected';
             startCallTimer();
             document.getElementById('callStatus').innerText = '00:00';
+            minimizeCall();
         })
         .on('broadcast', { event: 'ice' }, async ({ payload }) => {
             if (peerConnection && payload.candidate) {
@@ -3066,6 +3069,8 @@ async function acceptIncomingCall() {
     callState = 'connected';
     openCallUI(friend, '00:00', false);
     startCallTimer();
+    minimizeCall();
+
 }
 
 function declineIncomingCall() {
@@ -3091,6 +3096,8 @@ function openCallUI(friend, statusText, ringing) {
     document.getElementById('callStatus').innerText = statusText;
     document.getElementById('callOverlay').style.display = 'flex';
     document.getElementById('callBar').style.display = 'none';
+    micBtn.style.opacity = '0.4';
+    micBtn.style.pointerEvents = 'none';
 }
 
 function startCallTimer() {
@@ -3138,6 +3145,8 @@ function closeCallUI() {
     document.getElementById('callBar').style.display = 'none';
     document.getElementById('incomingCallToast').style.display = 'none';
     document.getElementById('remoteAudioEl').srcObject = null;
+    micBtn.style.opacity = '';
+    micBtn.style.pointerEvents = '';
 }
 
 </script>
